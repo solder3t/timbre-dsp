@@ -23,4 +23,5 @@ For rooted users, Timbre provides a Magisk module template that injects the comp
 Open the project in Android Studio and build normally. The C++ code is integrated via CMake and will compile alongside the Kotlin code.
 
 ## License
-MIT
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
