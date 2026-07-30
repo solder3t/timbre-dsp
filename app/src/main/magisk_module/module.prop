@@ -1,0 +1,6 @@
+id=timbre_dsp
+name=Timbre DSP Root Engine
+version=v1.0
+versionCode=1
+author=Timbre
+description=System-wide native DSP audio pipeline injection for the Timbre app.
