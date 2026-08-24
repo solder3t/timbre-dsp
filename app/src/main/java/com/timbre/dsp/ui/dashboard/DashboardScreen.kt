@@ -408,7 +408,39 @@ fun DashboardScreen(
             Spacer(modifier = Modifier.height(10.dp))
         }
 
-        // 6. EQ Mode Tab Bar
+        // 6. Preset Quick Chips Bar (Preset Library right above the EQ)
+        item {
+            Text(
+                text = "Preset Library",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                presets.forEach { preset ->
+                    val isSelected = settings.currentPresetId == preset.id
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                            onSelectPreset(preset)
+                        },
+                        label = { Text(preset.name) },
+                        leadingIcon = if (isSelected) {
+                            { Icon(Icons.Default.CheckCircle, contentDescription = null) }
+                        } else null
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        // 7. EQ Mode Tab Bar
         item {
             val tabs = listOf("10-Band Graphic", "Parametric EQ")
             val selectedIndex = if (settings.eqMode == EQMode.PARAMETRIC) 1 else 0
@@ -432,7 +464,7 @@ fun DashboardScreen(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // 7. Equalizer Controls (Graphic Sliders vs Parametric Band List)
+        // 8. Equalizer Controls (Graphic Sliders vs Parametric Band List)
         if (settings.eqMode != EQMode.PARAMETRIC) {
             // Classic Full-Width Horizontal Band Rows
             items(settings.bands.size) { index ->
@@ -506,39 +538,6 @@ fun DashboardScreen(
                     onClick = { editingParametricBand = band }
                 )
             }
-        }
-
-        // 8. Preset Quick Chips Bar
-        item {
-            Spacer(modifier = Modifier.height(14.dp))
-            Text(
-                text = "Preset Library",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                presets.forEach { preset ->
-                    val isSelected = settings.currentPresetId == preset.id
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                            onSelectPreset(preset)
-                        },
-                        label = { Text(preset.name) },
-                        leadingIcon = if (isSelected) {
-                            { Icon(Icons.Default.CheckCircle, contentDescription = null) }
-                        } else null
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
