@@ -60,7 +60,30 @@ object PresetRepository {
     val presets: StateFlow<List<EQPreset>> = _presets.asStateFlow()
 
     fun getPresetById(id: String): EQPreset? {
-        return _presets.value.find { it.id == id }
+        if (id.isBlank()) return null
+        val direct = _presets.value.find { it.id == id }
+        if (direct != null) return direct
+
+        val builtIn = builtInPresets.find { it.id.equals(id, ignoreCase = true) || it.name.equals(id, ignoreCase = true) }
+        if (builtIn != null) return builtIn
+
+        val custom = customPresets.find { it.id.equals(id, ignoreCase = true) || it.name.equals(id, ignoreCase = true) }
+        if (custom != null) return custom
+
+        if (id.startsWith("autoeq_")) {
+            val modelName = id.removePrefix("autoeq_")
+            val autoEq = AutoEqRepository.profiles.find { it.model.equals(modelName, ignoreCase = true) }
+            if (autoEq != null) {
+                return EQPreset(
+                    id = id,
+                    name = autoEq.model,
+                    bands = autoEq.bands,
+                    preampGain = autoEq.preampGain
+                )
+            }
+        }
+
+        return null
     }
 
     fun refreshPresets(context: Context? = null) {

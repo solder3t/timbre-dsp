@@ -334,14 +334,33 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
 
     fun bindAppToPreset(packageName: String, appName: String, presetId: String) {
         appProfileManager.addAppProfile(packageName, appName, presetId)
+        val preset = PresetRepository.getPresetById(presetId)
+        if (preset != null) {
+            selectPreset(preset)
+        }
     }
 
     fun updateAppProfile(packageName: String, presetId: String, isEnabled: Boolean) {
         appProfileManager.updateAppProfile(packageName, presetId, isEnabled)
+        if (isEnabled) {
+            val preset = PresetRepository.getPresetById(presetId)
+            if (preset != null) {
+                selectPreset(preset)
+            }
+        }
     }
 
     fun toggleAppProfile(packageName: String, isEnabled: Boolean) {
         appProfileManager.toggleAppProfile(packageName, isEnabled)
+        if (isEnabled) {
+            val profile = appProfileManager.profilesList.value.find { it.packageName == packageName }
+            if (profile != null && profile.presetId.isNotBlank()) {
+                val preset = PresetRepository.getPresetById(profile.presetId)
+                if (preset != null) {
+                    selectPreset(preset)
+                }
+            }
+        }
     }
 
     fun removeAppProfile(packageName: String) {

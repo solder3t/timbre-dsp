@@ -309,7 +309,7 @@ fun SessionsScreen(
                     Icon(Icons.Default.Apps, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Configured Per-App Auto-Profiles (${appProfiles.size})",
+                        text = "Configure Per-App Auto-Profiles (${appProfiles.size})",
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -326,7 +326,7 @@ fun SessionsScreen(
         }
 
         items(appProfiles) { profile ->
-            ConfiguredAppProfileCard(
+            ConfigureAppProfileCard(
                 profile = profile,
                 presets = presets,
                 hazeState = hazeState,
@@ -343,7 +343,7 @@ fun SessionsScreen(
 }
 
 @Composable
-private fun ConfiguredAppProfileCard(
+private fun ConfigureAppProfileCard(
     profile: AppProfile,
     presets: List<EQPreset>,
     hazeState: HazeState? = null,
