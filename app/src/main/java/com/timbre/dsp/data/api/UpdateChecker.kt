@@ -21,7 +21,7 @@ object UpdateChecker {
 
     private const val TAG = "UpdateChecker"
     private const val GITHUB_RELEASES_URL = "https://api.github.com/repos/solder3t/timbre-dsp/releases/latest"
-    const val CURRENT_VERSION = "1.0"
+    const val CURRENT_VERSION = "1.2.0"
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)

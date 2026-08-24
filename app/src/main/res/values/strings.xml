@@ -366,4 +366,11 @@
     <string name="update_current_version_format">Current: v%1$s</string>
     <string name="update_release_notes_label">Release Notes:</string>
     <string name="update_default_notes">Performance improvements and bug fixes.</string>
+    <string name="update_download_and_install">Download &amp; Install</string>
+    <string name="update_install_now">Install APK</string>
+    <string name="update_downloading">Downloading update…</string>
+    <string name="update_progress_format">%1$.1f MB / %2$.1f MB (%3$d%%)</string>
+    <string name="update_download_complete">Download complete. Starting package installer…</string>
+    <string name="update_download_failed">Download failed: %1$s</string>
+    <string name="btn_cancel_download">Cancel Download</string>
 </resources>
