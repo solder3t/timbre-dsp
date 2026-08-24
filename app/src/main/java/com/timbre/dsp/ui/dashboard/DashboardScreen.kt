@@ -209,6 +209,13 @@ fun DashboardScreen(
                         onCheckedChange = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onToggleMaster(it)
+                        },
+                        thumbContent = {
+                            Icon(
+                                imageVector = Icons.Default.PowerSettingsNew,
+                                contentDescription = null,
+                                modifier = Modifier.padding(2.dp)
+                            )
                         }
                     )
                 }
