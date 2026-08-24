@@ -46,8 +46,8 @@ android {
         applicationId = "com.timbre.dsp"
         minSdk = 24
         targetSdk = 37
-        versionCode = 3
-        versionName = "1.2.3"
+        versionCode = 4
+        versionName = "1.2.4"
         externalNativeBuild {
             cmake {
                 cppFlags += "-std=c++20"
