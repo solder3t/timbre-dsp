@@ -234,10 +234,15 @@
     <string name="settings_header_subtitle">Appearance, DSP engine, permissions &amp; updates</string>
 
     <string name="settings_section_appearance">Appearance &amp; Theme</string>
+    <string name="settings_section_appearance_subtitle">Theme mode, AMOLED black, accent color &amp; blur</string>
     <string name="settings_section_permissions">Audio Setup &amp; Permissions</string>
+    <string name="settings_section_permissions_subtitle">Shizuku, Root hooks, media notifications &amp; ADB</string>
     <string name="settings_section_engine">DSP Engine &amp; Audio Routing</string>
+    <string name="settings_section_engine_subtitle">Audio routing mode, peak limiter &amp; visualizer</string>
     <string name="settings_section_backup">Sleep Timer &amp; Backup Suite</string>
+    <string name="settings_section_backup_subtitle">Sleep timer, preset &amp; profile backup export/restore</string>
     <string name="settings_section_about">App Info &amp; Updates</string>
+    <string name="settings_section_about_subtitle">v%1$s • Check for updates &amp; source code</string>
 
     <!-- Theme & Appearance -->
     <string name="theme_mode_title">Theme Mode</string>
