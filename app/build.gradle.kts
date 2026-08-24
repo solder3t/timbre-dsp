@@ -73,6 +73,7 @@ dependencies {
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling.preview)
   implementation(libs.androidx.compose.material3)
+  implementation(libs.androidx.compose.material.icons.extended)
   // Tooling
   debugImplementation(libs.androidx.compose.ui.tooling)
   // Instrumented tests
@@ -100,5 +101,5 @@ dependencies {
 
   // Shizuku
   implementation(libs.shizuku.api)
-  compileOnly(libs.shizuku.provider)
+  implementation(libs.shizuku.provider)
 }

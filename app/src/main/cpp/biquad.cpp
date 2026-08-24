@@ -1,4 +1,9 @@
 #include "biquad.h"
+#include <cmath>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 namespace dsp {
 
@@ -24,12 +29,15 @@ void Biquad::setType(BiquadType type) {
 }
 
 void Biquad::setQ(double q) {
-    this->Q = q;
+    this->Q = (q > 0.001) ? q : 0.001;
     calculateCoefficients();
 }
 
 void Biquad::setFc(double fc) {
-    this->Fc = fc;
+    this->Fc = (fc > 10.0) ? fc : 10.0;
+    if (this->Fc > sampleRate * 0.499) {
+        this->Fc = sampleRate * 0.499;
+    }
     calculateCoefficients();
 }
 
@@ -39,43 +47,95 @@ void Biquad::setPeakGain(double peakGaindB) {
 }
 
 void Biquad::setSampleRate(double sampleRate) {
-    this->sampleRate = sampleRate;
+    this->sampleRate = (sampleRate > 8000.0) ? sampleRate : 48000.0;
     calculateCoefficients();
 }
 
 void Biquad::calculateCoefficients() {
-    double norm;
-    double V = pow(10, fabs(peakGain) / 20.0);
-    double K = tan(M_PI * Fc / sampleRate);
-    
-    switch (this->type) {
-        case BiquadType::PEAK:
-            if (peakGain >= 0) {    // boost
-                norm = 1 / (1 + 1/Q * K + K * K);
-                a0 = (1 + V/Q * K + K * K) * norm;
-                a1 = 2 * (K * K - 1) * norm;
-                a2 = (1 - V/Q * K + K * K) * norm;
-                b1 = a1;
-                b2 = (1 - 1/Q * K + K * K) * norm;
-            } else {    // cut
-                norm = 1 / (1 + V/Q * K + K * K);
-                a0 = (1 + 1/Q * K + K * K) * norm;
-                a1 = 2 * (K * K - 1) * norm;
-                a2 = (1 - 1/Q * K + K * K) * norm;
-                b1 = a1;
-                b2 = (1 - V/Q * K + K * K) * norm;
-            }
+    double w0 = 2.0 * M_PI * Fc / sampleRate;
+    double cosw0 = cos(w0);
+    double sinw0 = sin(w0);
+    double alpha = sinw0 / (2.0 * Q);
+    double A = pow(10.0, peakGain / 40.0);
+    double norm = 1.0;
+
+    double b0_val = 1.0, b1_val = 0.0, b2_val = 0.0;
+    double a0_val = 1.0, a1_val = 0.0, a2_val = 0.0;
+
+    switch (type) {
+        case BiquadType::PEAK: {
+            b0_val = 1.0 + alpha * A;
+            b1_val = -2.0 * cosw0;
+            b2_val = 1.0 - alpha * A;
+            a0_val = 1.0 + alpha / A;
+            a1_val = -2.0 * cosw0;
+            a2_val = 1.0 - alpha / A;
             break;
-        // Other types like LOWSHELF, HIGHSHELF can be added here
-        default:
-            // Default to bypass
-            a0 = 1.0;
-            a1 = 0.0;
-            a2 = 0.0;
-            b1 = 0.0;
-            b2 = 0.0;
+        }
+        case BiquadType::LOWSHELF: {
+            double sqrtA2 = 2.0 * sqrt(A) * alpha;
+            b0_val = A * ((A + 1.0) - (A - 1.0) * cosw0 + sqrtA2);
+            b1_val = 2.0 * A * ((A - 1.0) - (A + 1.0) * cosw0);
+            b2_val = A * ((A + 1.0) - (A - 1.0) * cosw0 - sqrtA2);
+            a0_val = (A + 1.0) + (A - 1.0) * cosw0 + sqrtA2;
+            a1_val = -2.0 * ((A - 1.0) + (A + 1.0) * cosw0);
+            a2_val = (A + 1.0) + (A - 1.0) * cosw0 - sqrtA2;
             break;
+        }
+        case BiquadType::HIGHSHELF: {
+            double sqrtA2 = 2.0 * sqrt(A) * alpha;
+            b0_val = A * ((A + 1.0) + (A - 1.0) * cosw0 + sqrtA2);
+            b1_val = -2.0 * A * ((A - 1.0) + (A + 1.0) * cosw0);
+            b2_val = A * ((A + 1.0) + (A - 1.0) * cosw0 - sqrtA2);
+            a0_val = (A + 1.0) - (A - 1.0) * cosw0 + sqrtA2;
+            a1_val = 2.0 * ((A - 1.0) - (A + 1.0) * cosw0);
+            a2_val = (A + 1.0) - (A - 1.0) * cosw0 - sqrtA2;
+            break;
+        }
+        case BiquadType::LOWPASS: {
+            b0_val = (1.0 - cosw0) / 2.0;
+            b1_val = 1.0 - cosw0;
+            b2_val = (1.0 - cosw0) / 2.0;
+            a0_val = 1.0 + alpha;
+            a1_val = -2.0 * cosw0;
+            a2_val = 1.0 - alpha;
+            break;
+        }
+        case BiquadType::HIGHPASS: {
+            b0_val = (1.0 + cosw0) / 2.0;
+            b1_val = -(1.0 + cosw0);
+            b2_val = (1.0 + cosw0) / 2.0;
+            a0_val = 1.0 + alpha;
+            a1_val = -2.0 * cosw0;
+            a2_val = 1.0 - alpha;
+            break;
+        }
+        case BiquadType::BANDPASS: {
+            b0_val = alpha;
+            b1_val = 0.0;
+            b2_val = -alpha;
+            a0_val = 1.0 + alpha;
+            a1_val = -2.0 * cosw0;
+            a2_val = 1.0 - alpha;
+            break;
+        }
+        case BiquadType::NOTCH: {
+            b0_val = 1.0;
+            b1_val = -2.0 * cosw0;
+            b2_val = 1.0;
+            a0_val = 1.0 + alpha;
+            a1_val = -2.0 * cosw0;
+            a2_val = 1.0 - alpha;
+            break;
+        }
     }
+
+    norm = 1.0 / a0_val;
+    a0 = b0_val * norm;
+    a1 = b1_val * norm;
+    a2 = b2_val * norm;
+    b1 = a1_val * norm;
+    b2 = a2_val * norm;
 }
 
 float Biquad::process(float in) {

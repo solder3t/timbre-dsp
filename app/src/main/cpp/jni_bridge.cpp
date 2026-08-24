@@ -37,8 +37,62 @@ Java_com_timbre_dsp_DSPEngine_processBuffer(JNIEnv* env, jobject /* this */, jlo
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_com_timbre_dsp_DSPEngine_processStereoBuffer(JNIEnv* env, jobject /* this */, jlong engineHandle, jfloatArray left, jfloatArray right, jint numSamples) {
+    if (engineHandle == 0) return;
+    auto* engine = reinterpret_cast<dsp::Engine*>(engineHandle);
+
+    jfloat* cLeft = env->GetFloatArrayElements(left, nullptr);
+    jfloat* cRight = env->GetFloatArrayElements(right, nullptr);
+    if (cLeft == nullptr || cRight == nullptr) {
+        if (cLeft) env->ReleaseFloatArrayElements(left, cLeft, 0);
+        if (cRight) env->ReleaseFloatArrayElements(right, cRight, 0);
+        return;
+    }
+
+    engine->processStereo(cLeft, cRight, numSamples);
+
+    env->ReleaseFloatArrayElements(left, cLeft, 0);
+    env->ReleaseFloatArrayElements(right, cRight, 0);
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_com_timbre_dsp_DSPEngine_setBandGain(JNIEnv* env, jobject /* this */, jlong engineHandle, jint index, jfloat gain) {
     if (engineHandle == 0) return;
     auto* engine = reinterpret_cast<dsp::Engine*>(engineHandle);
     engine->setBandGain(index, gain);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_timbre_dsp_DSPEngine_setBandParameters(JNIEnv* env, jobject /* this */, jlong engineHandle, jint index, jint type, jfloat fc, jfloat q, jfloat gain) {
+    if (engineHandle == 0) return;
+    auto* engine = reinterpret_cast<dsp::Engine*>(engineHandle);
+    engine->setBandParameters(index, type, fc, q, gain);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_timbre_dsp_DSPEngine_setPreampGain(JNIEnv* env, jobject /* this */, jlong engineHandle, jfloat gainDb) {
+    if (engineHandle == 0) return;
+    auto* engine = reinterpret_cast<dsp::Engine*>(engineHandle);
+    engine->setPreampGain(gainDb);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_timbre_dsp_DSPEngine_setLimiterEnabled(JNIEnv* env, jobject /* this */, jlong engineHandle, jboolean enabled) {
+    if (engineHandle == 0) return;
+    auto* engine = reinterpret_cast<dsp::Engine*>(engineHandle);
+    engine->setLimiterEnabled(enabled);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_timbre_dsp_DSPEngine_setBassBoost(JNIEnv* env, jobject /* this */, jlong engineHandle, jboolean enabled, jfloat gainDb, jfloat cutoffFreq) {
+    if (engineHandle == 0) return;
+    auto* engine = reinterpret_cast<dsp::Engine*>(engineHandle);
+    engine->setBassBoost(enabled, gainDb, cutoffFreq);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_timbre_dsp_DSPEngine_setCrossfeed(JNIEnv* env, jobject /* this */, jlong engineHandle, jboolean enabled, jfloat strength) {
+    if (engineHandle == 0) return;
+    auto* engine = reinterpret_cast<dsp::Engine*>(engineHandle);
+    engine->setCrossfeed(enabled, strength);
 }

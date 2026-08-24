@@ -1,18 +1,24 @@
 package com.timbre.dsp
 
-import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import com.timbre.dsp.audio.AudioSessionTracker
 
 class MediaSessionListenerService : NotificationListenerService() {
 
-    private lateinit var effectManager: ShizukuEffectManager
+    private lateinit var tracker: AudioSessionTracker
 
     override fun onCreate() {
         super.onCreate()
-        effectManager = ShizukuEffectManager()
+        tracker = AudioSessionTracker.getInstance(this)
+    }
+
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        Log.i(TAG, "NotificationListenerService connected")
+        checkActiveSessions()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -22,24 +28,27 @@ class MediaSessionListenerService : NotificationListenerService() {
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         super.onNotificationRemoved(sbn)
-        // Would normally check if a session ended to release its effect
+        checkActiveSessions()
     }
 
     private fun checkActiveSessions() {
         try {
             val mediaSessionManager = getSystemService(MediaSessionManager::class.java)
-            val controllers = mediaSessionManager.getActiveSessions(null)
-            
+            val controllers = mediaSessionManager?.getActiveSessions(null) ?: emptyList()
             for (controller in controllers) {
-                // In a real scenario, we'd use reflection or Shizuku IPC to extract 
-                // the hidden getAudioSessionId() from the MediaController or its PlaybackInfo
-                // For demonstration, we assume a mock session ID
-                val mockSessionId = 0 
-                
-                // effectManager.attachEffectToSession(mockSessionId)
+                val pkg = controller.packageName ?: continue
+                Log.d(TAG, "Active media controller detected: $pkg")
             }
+            // Trigger AudioFlinger scanning to bind newly started sessions
+            tracker.scanAudioFlinger()
         } catch (e: SecurityException) {
-            Log.w("MediaSessionListener", "Missing NotificationListener permission")
+            Log.w(TAG, "Missing NotificationListener permission", e)
+        } catch (e: Throwable) {
+            Log.e(TAG, "Error checking active media sessions", e)
         }
+    }
+
+    companion object {
+        private const val TAG = "MediaSessionListener"
     }
 }
