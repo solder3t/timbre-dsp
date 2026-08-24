@@ -34,8 +34,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import com.timbre.dsp.R
 import com.timbre.dsp.data.EqualizerApoParser
 import com.timbre.dsp.model.EQPreset
 
@@ -57,19 +59,19 @@ fun ImportExportDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Equalizer APO / Peace EQ") },
+        title = { Text(stringResource(R.string.dialog_import_export_title)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 PrimaryTabRow(selectedTabIndex = selectedTab) {
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text("Import") }
+                        text = { Text(stringResource(R.string.tab_import_text)) }
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text("Export") }
+                        text = { Text(stringResource(R.string.tab_export_settings)) }
                     )
                 }
 
@@ -80,7 +82,7 @@ fun ImportExportDialog(
                     OutlinedTextField(
                         value = presetName,
                         onValueChange = { presetName = it },
-                        label = { Text("Preset Name") },
+                        label = { Text(stringResource(R.string.dialog_preset_name_label)) },
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -92,7 +94,7 @@ fun ImportExportDialog(
                         value = importText,
                         onValueChange = { importText = it },
                         label = { Text("Peace EQ / AutoEq Text") },
-                        placeholder = { Text("Filter 1: ON PK Fc 31 Hz Gain 3.5 dB Q 1.41\nFilter 2: ON LSC Fc 105 Hz Gain 5.5 dB Q 0.71") },
+                        placeholder = { Text(stringResource(R.string.dialog_paste_config_placeholder)) },
                         textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         modifier = Modifier.fillMaxWidth().height(160.dp),
                         shape = RoundedCornerShape(12.dp)
@@ -138,7 +140,7 @@ fun ImportExportDialog(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Default.ContentCopy, contentDescription = null)
-                        Text(modifier = Modifier.padding(start = 8.dp), text = "Copy Configuration")
+                        Text(modifier = Modifier.padding(start = 8.dp), text = stringResource(R.string.btn_copy_clipboard))
                     }
                 }
             }
@@ -155,18 +157,18 @@ fun ImportExportDialog(
                     },
                     enabled = importText.isNotBlank()
                 ) {
-                    Text("Apply Preset")
+                    Text(stringResource(R.string.btn_import_preset))
                 }
             } else {
                 TextButton(onClick = onDismiss) {
-                    Text("Close")
+                    Text(stringResource(R.string.btn_close))
                 }
             }
         },
         dismissButton = {
             if (selectedTab == 0) {
                 TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         }

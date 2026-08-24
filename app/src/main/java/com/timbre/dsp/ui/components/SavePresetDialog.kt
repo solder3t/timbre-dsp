@@ -17,7 +17,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.timbre.dsp.R
 
 @Composable
 fun SavePresetDialog(
@@ -28,11 +30,11 @@ fun SavePresetDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Save Custom Preset") },
+        title = { Text(stringResource(R.string.dialog_save_preset_title)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    "Enter a name for your custom EQ preset:",
+                    stringResource(R.string.dialog_preset_name_placeholder),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -40,6 +42,7 @@ fun SavePresetDialog(
                 OutlinedTextField(
                     value = presetName,
                     onValueChange = { presetName = it },
+                    label = { Text(stringResource(R.string.dialog_preset_name_label)) },
                     placeholder = { Text("e.g. My Bass Staging") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -57,12 +60,12 @@ fun SavePresetDialog(
                 },
                 enabled = presetName.isNotBlank()
             ) {
-                Text("Save")
+                Text(stringResource(R.string.btn_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

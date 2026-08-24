@@ -41,8 +41,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.timbre.dsp.R
 import com.timbre.dsp.data.AutoEqRepository
 import com.timbre.dsp.model.AutoEqProfile
 
@@ -67,13 +69,13 @@ fun AutoEqDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Headphones, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("AutoEq Acoustic Profiles")
+                Text(stringResource(R.string.autoeq_dialog_title))
             }
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    "Calibrate your headphones, IEMs, TWS earbuds, or Bluetooth speakers to optimal target curves.",
+                    stringResource(R.string.autoeq_dialog_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -100,7 +102,7 @@ fun AutoEqDialog(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search Nothing, CMF, Moondrop, JBL...") },
+                    placeholder = { Text(stringResource(R.string.autoeq_search_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -119,7 +121,7 @@ fun AutoEqDialog(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = if (searchQuery.isNotBlank()) "No device matching '$searchQuery' in this category." else "No profiles available.",
+                                text = if (searchQuery.isNotBlank()) stringResource(R.string.autoeq_not_found, searchQuery) else stringResource(R.string.autoeq_no_profiles),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Spacer(modifier = Modifier.height(10.dp))
@@ -132,7 +134,7 @@ fun AutoEqDialog(
                                 ) {
                                     Icon(Icons.Default.AutoAwesome, contentDescription = null)
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("AI AutoEQ Generate")
+                                    Text(stringResource(R.string.autoeq_btn_ai_generate))
                                 }
                             }
                         }
@@ -198,7 +200,7 @@ fun AutoEqDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(stringResource(R.string.btn_close))
             }
         }
     )

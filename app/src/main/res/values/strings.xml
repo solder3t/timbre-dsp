@@ -1,3 +1,218 @@
 <resources>
     <string name="app_name">Timbre</string>
+
+    <!-- Navigation -->
+    <string name="nav_equalizer">Equalizer</string>
+    <string name="nav_effects">Effects</string>
+    <string name="nav_sessions">Sessions</string>
+    <string name="nav_setup">Setup</string>
+
+    <!-- Dashboard / Master Engine -->
+    <string name="dsp_engine_active">Timbre DSP Engine Active</string>
+    <string name="dsp_engine_bypassed">Timbre DSP Engine Bypassed</string>
+    <string name="dsp_preset_summary">Preset: %1$s • %2$s dB Preamp</string>
+
+    <!-- Device Banner & Routing -->
+    <string name="device_speaker_builtin">Built-in Speaker (%1$s)</string>
+    <string name="device_speaker_default">Built-in Device Speaker</string>
+    <string name="device_wired_headphones">Wired Headphones</string>
+    <string name="device_usb_dac">USB Audio DAC</string>
+    <string name="device_bluetooth_audio">Bluetooth Audio</string>
+    <string name="device_external_output">External Output</string>
+    <string name="device_auto_preset_bound">Auto-Preset: %1$s</string>
+    <string name="device_auto_routing_active">%1$s • Auto-routing active</string>
+    <string name="action_link_preset">Link Preset</string>
+    <string name="action_linked">Linked</string>
+    <string name="action_link_to_preset">Link to %1$s</string>
+    <string name="action_unbind_device">Unbind Device Profile</string>
+    <string name="routing_mode_banner">Routing: %1$s Mode</string>
+    <string name="routing_manage_operational">Tap to manage Shizuku / Root routing</string>
+    <string name="routing_configure_required">Tap to configure Shizuku, Root, or Notification access</string>
+
+    <!-- Acoustic Response & EQ Visualizer -->
+    <string name="acoustic_response_curve">Acoustic Response Curve</string>
+    <string name="mode_graphic_10">10-Band Graphic</string>
+    <string name="mode_parametric_n">%1$d-Band Parametric</string>
+    <string name="parametric_filters_header">Parametric Filters (%1$d)</string>
+    <string name="action_add_band">Add Band</string>
+    <string name="target_curve_title">Target Curve</string>
+
+    <!-- Action Row -->
+    <string name="action_ai_assistant">AI Assistant</string>
+    <string name="action_autoeq_profiles">AutoEq Profiles</string>
+    <string name="action_save_preset">Save Preset</string>
+    <string name="action_peace_import">Peace / APO Import</string>
+    <string name="action_reset_flat">Reset Flat</string>
+
+    <!-- Preset Library -->
+    <string name="preset_library_title">Preset Library</string>
+
+    <!-- Effects Screen -->
+    <string name="effects_master_title">DSP Master Engine</string>
+    <string name="effects_master_device">Timbre Master Output</string>
+    <string name="effects_master_active">Active Processing Pipeline</string>
+    <string name="effects_master_bypassed">Bypassed</string>
+
+    <string name="effects_section_dynamics">Limiter &amp; Auto-Preamp</string>
+    <string name="effects_auto_preamp_title">Auto-Preamp Headroom</string>
+    <string name="effects_auto_preamp_desc">Automatically offsets EQ band peaks to prevent digital clipping / distortion</string>
+    <string name="effects_limiter_title">Dynamic Output Limiter</string>
+    <string name="effects_limiter_desc">Prevents output saturation and inter-sample peaks at high listening volumes</string>
+    <string name="effects_threshold">Threshold</string>
+    <string name="effects_release">Release</string>
+
+    <string name="effects_section_bass_spatial">Bass &amp; Spatial Processing</string>
+    <string name="effects_bass_boost_title">Bass Sub-Harmonic Boost</string>
+    <string name="effects_bass_boost_desc">Synthesizes and enhances low-frequency sub-bass fundamentals</string>
+    <string name="effects_strength">Strength</string>
+    <string name="effects_cutoff_frequency">Cutoff Freq</string>
+    <string name="effects_virtualizer_title">Stereo Virtualizer</string>
+    <string name="effects_virtualizer_desc">Expands spatial soundstage width for headphones and earbuds</string>
+    <string name="effects_crossfeed_title">Crossfeed (Binaural BS2B)</string>
+    <string name="effects_crossfeed_desc">Reduces extreme stereo headphone separation fatigue for a natural speaker-like soundstage</string>
+
+    <string name="effects_section_clarity">Clarity &amp; Detail</string>
+    <string name="effects_clarity_title">Clarity / Air Exciter</string>
+    <string name="effects_clarity_desc">Harmonic upper-air excitation for crystal-clear vocals, cymbals, and acoustics</string>
+    <string name="effects_excitation">Harmonic Excitation</string>
+
+    <string name="effects_section_convolution">Convolution Engine (Impulse Response)</string>
+    <string name="effects_convolution_desc">Realistic acoustic room models, tube amplifiers, and cabinet impulse responses</string>
+    <string name="effects_active_ir">Active Impulse Response</string>
+    <string name="effects_wet_dry_mix">Wet / Dry Mix</string>
+    <string name="effects_import_custom_ir">Import Custom IR (.wav)</string>
+
+    <string name="effects_section_hearing">Audiogram Hearing Correction</string>
+    <string name="effects_hearing_desc">Calibrated frequency compensation tailored to your personal hearing thresholds</string>
+    <string name="effects_perform_hearing_test">Perform Hearing Test</string>
+    <string name="effects_retake_hearing_test">Retake Hearing Test</string>
+    <string name="effects_calibrated_profile">Calibrated Compensation Profile Active</string>
+
+    <string name="effects_section_channel_routing">Channel Balance &amp; Routing</string>
+    <string name="effects_balance_title">Left / Right Balance</string>
+    <string name="effects_balance_desc">Independent left and right channel gain attenuation</string>
+    <string name="effects_label_left">L</string>
+    <string name="effects_label_center">Center</string>
+    <string name="effects_label_right">R</string>
+    <string name="effects_force_mono_title">Force Mono Output</string>
+    <string name="effects_force_mono_desc">Sums stereo channels into a single mono output (useful for single-earbud listening)</string>
+
+    <!-- Sessions Screen -->
+    <string name="sessions_header_title">Audio Session Interception</string>
+    <string name="sessions_header_subtitle">Active Player Interception</string>
+    <string name="sessions_rescan">Rescan</string>
+    <string name="sessions_active_header">Active Intercepted Audio Sessions (%1$d)</string>
+    <string name="sessions_no_active_title">No active audio sessions detected</string>
+    <string name="sessions_no_active_desc">Start playing music in Spotify, YouTube Music, or Apple Music, or tap Rescan.</string>
+    <string name="sessions_count_format">Sessions: %1$d active audio pipeline</string>
+    <string name="sessions_configure_app_profiles_title">Configure Per-App Auto-Profiles (%1$d)</string>
+    <string name="sessions_add_rule">Add App Rule</string>
+    <string name="sessions_delete_profile">Delete Profile</string>
+
+    <!-- Setup & Permissions Screen -->
+    <string name="setup_header_title">Audio Routing &amp; Privileges</string>
+    <string name="setup_header_subtitle">System Integration &amp; Engine Permissions</string>
+    <string name="perm_shizuku_title">Shizuku Shell Access</string>
+    <string name="perm_shizuku_desc">Provides privileged direct command-line access via the Shizuku API without requiring full root access.</string>
+    <string name="btn_grant_permission">Grant Permission</string>
+    <string name="btn_grant_dump">Grant DUMP</string>
+    <string name="btn_open_shizuku">Open Shizuku</string>
+    <string name="status_granted">Granted</string>
+
+    <string name="perm_root_title">Root Access (Superuser)</string>
+    <string name="perm_root_desc">Direct superuser su bridge for high-priority AudioFlinger dumpsys hooks.</string>
+    <string name="btn_request_root">Request Root</string>
+    <string name="status_active">Active</string>
+
+    <string name="perm_notif_title">Notification Listener Access</string>
+    <string name="perm_notif_desc">Required for real-time media player detection (Spotify, YouTube, Tidal, etc.) to trigger per-app profiles.</string>
+    <string name="btn_open_settings">Open Settings</string>
+    <string name="status_enabled">Enabled</string>
+
+    <string name="perm_battery_title">Battery Optimization</string>
+    <string name="perm_battery_desc">Exempt Timbre DSP from Android OEM background killing to prevent audio drops.</string>
+    <string name="btn_disable_optimization">Disable Optimization</string>
+    <string name="status_ignored">Ignored</string>
+
+    <string name="sleep_timer_title">Acoustic Sleep Timer</string>
+    <string name="sleep_timer_desc">Gradually fade out audio levels and pause media playback after a set duration.</string>
+    <string name="sleep_timer_running">Timer Running: %1$s</string>
+    <string name="btn_start_sleep_timer">Start Sleep Timer</string>
+    <string name="btn_cancel_timer">Cancel Timer</string>
+
+    <string name="adb_command_title">ADB Command (No Root / No Shizuku)</string>
+    <string name="adb_command_desc">If you do not have Root or Shizuku, run this one-time command from your PC via USB debugging:</string>
+    <string name="btn_copy_adb">Copy ADB Command</string>
+    <string name="msg_copied_clipboard">Command copied to clipboard!</string>
+
+    <string name="magisk_module_title">Systemless Magisk / KernelSU Module</string>
+    <string name="magisk_module_desc">Install Timbre DSP as a system-level audio effect module for global audio interception without audio glitches.</string>
+    <string name="btn_install_module">Install Module</string>
+
+    <!-- Dialogs: AI Assistant -->
+    <string name="ai_dialog_title">AI Acoustic Tuning Assistant</string>
+    <string name="ai_dialog_desc">Describe how you want your audio to sound in plain English, and our AI will translate it into a calibrated DSP preset.</string>
+    <string name="ai_dialog_placeholder">e.g., \'Warm sound with punchy bass and silky vocals for jazz music\'</string>
+    <string name="ai_dialog_provider_label">Selected Provider</string>
+    <string name="ai_dialog_key_label">API Key (Stored securely on device)</string>
+    <string name="ai_dialog_url_label">Optional API Endpoint URL</string>
+    <string name="ai_dialog_btn_generate">Generate Acoustic Profile</string>
+    <string name="ai_dialog_applying">Applying AI Preset…</string>
+    <string name="ai_dialog_quick_prompts">Quick Prompts</string>
+    <string name="ai_prompt_bass">Bass Boost &amp; Warmth</string>
+    <string name="ai_prompt_vocals">Crisp Vocals &amp; Acoustic</string>
+    <string name="ai_prompt_harman">Harman Target Tuning</string>
+    <string name="ai_prompt_gaming">V-Shaped Gaming / Movies</string>
+    <string name="ai_prompt_lofi">Lo-Fi Vintage Chill</string>
+
+    <!-- Dialogs: AutoEq -->
+    <string name="autoeq_dialog_title">AutoEq Acoustic Profiles</string>
+    <string name="autoeq_dialog_desc">Calibrate your headphones, IEMs, TWS earbuds, or Bluetooth speakers to optimal target curves.</string>
+    <string name="autoeq_search_placeholder">Search Nothing, CMF, Moondrop, JBL…</string>
+    <string name="autoeq_cat_all">All</string>
+    <string name="autoeq_cat_nothing_cmf">Nothing / CMF</string>
+    <string name="autoeq_cat_iems">IEMs</string>
+    <string name="autoeq_cat_tws">TWS Earbuds</string>
+    <string name="autoeq_cat_speakers">Speakers</string>
+    <string name="autoeq_cat_overear">Over-Ear</string>
+    <string name="autoeq_not_found">No device matching \'%1$s\' in this category.</string>
+    <string name="autoeq_no_profiles">No profiles available.</string>
+    <string name="autoeq_btn_ai_generate">AI AutoEQ Generate</string>
+
+    <!-- Dialogs: Save Preset -->
+    <string name="dialog_save_preset_title">Save Custom Preset</string>
+    <string name="dialog_preset_name_label">Preset Name</string>
+    <string name="dialog_preset_name_placeholder">Enter a name for your custom EQ preset…</string>
+
+    <!-- Dialogs: Import / Export -->
+    <string name="dialog_import_export_title">Import / Export Equalizer Preset</string>
+    <string name="dialog_import_export_desc">Import Peace / Equalizer APO config text or export current DSP settings.</string>
+    <string name="tab_import_text">Import from Text / Peace</string>
+    <string name="tab_export_settings">Export Current Settings</string>
+    <string name="dialog_paste_config_placeholder">Paste Peace EQ / AutoEq text configuration here…</string>
+    <string name="btn_import_preset">Import Preset</string>
+    <string name="btn_copy_clipboard">Copy to Clipboard</string>
+    <string name="msg_exported_copied">Settings copied to clipboard!</string>
+
+    <!-- Dialogs: Add App Profile -->
+    <string name="dialog_add_app_title">Add App Audio Profile</string>
+    <string name="dialog_add_app_desc">Select an installed media app to automatically assign an EQ preset when launched:</string>
+    <string name="dialog_search_apps_placeholder">Search installed apps…</string>
+    <string name="dialog_select_preset_label">Select Preset: %1$s</string>
+    <string name="btn_add_profile">Add Profile</string>
+
+    <!-- Dialogs: Parametric Band Editor -->
+    <string name="dialog_param_title">Edit Parametric Filter Band</string>
+    <string name="dialog_param_filter_type">Filter Type</string>
+    <string name="dialog_param_frequency">Frequency: %1$.1f Hz</string>
+    <string name="dialog_param_gain">Gain: %1$.1f dB</string>
+    <string name="dialog_param_q">Q Factor: %1$.2f</string>
+    <string name="btn_delete_band">Delete Band</string>
+    <string name="btn_save_band">Save Band</string>
+
+    <!-- General Common Buttons -->
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_close">Close</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_apply">Apply</string>
 </resources>

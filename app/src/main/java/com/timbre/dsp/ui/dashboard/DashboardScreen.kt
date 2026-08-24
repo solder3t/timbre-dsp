@@ -66,9 +66,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.timbre.dsp.R
 import com.timbre.dsp.model.OutputDeviceType
 import com.timbre.dsp.RoutingStatus
 import com.timbre.dsp.model.AutoEqProfile
@@ -227,12 +229,12 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = if (settings.isEnabled) "Timbre DSP Engine Active" else "Timbre DSP Engine Bypassed",
+                                text = if (settings.isEnabled) stringResource(R.string.dsp_engine_active) else stringResource(R.string.dsp_engine_bypassed),
                                 style = MaterialTheme.typography.titleMedium
                             )
                             val presetName = presets.find { it.id == settings.currentPresetId }?.name ?: settings.currentPresetId.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
                             Text(
-                                text = "Preset: $presetName • ${String.format(Locale.ROOT, "%.1f", settings.preampGain)} dB Preamp",
+                                text = stringResource(R.string.dsp_preset_summary, presetName, String.format(Locale.ROOT, "%.1f", settings.preampGain)),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -328,7 +330,7 @@ fun DashboardScreen(
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            text = "Auto-Preset: ${boundPreset.name}",
+                                            text = stringResource(R.string.device_auto_preset_bound, boundPreset.name),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Medium
@@ -336,7 +338,7 @@ fun DashboardScreen(
                                     }
                                 } else {
                                     Text(
-                                        text = "${currentDevice.deviceType.displayName} • Auto-routing active",
+                                        text = stringResource(R.string.device_auto_routing_active, currentDevice.deviceType.displayName),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -360,7 +362,7 @@ fun DashboardScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = if (isBoundToCurrent) "Linked" else "Link Preset",
+                                    text = if (isBoundToCurrent) stringResource(R.string.action_linked) else stringResource(R.string.action_link_preset),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -372,7 +374,7 @@ fun DashboardScreen(
                             ) {
                                 val currentPresetName = presets.find { it.id == settings.currentPresetId }?.name ?: "Current"
                                 DropdownMenuItem(
-                                    text = { Text("Link to $currentPresetName", fontWeight = FontWeight.SemiBold) },
+                                    text = { Text(stringResource(R.string.action_link_to_preset, currentPresetName), fontWeight = FontWeight.SemiBold) },
                                     leadingIcon = { Icon(Icons.Default.BookmarkAdd, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                                     onClick = {
                                         onBindCurrentDevice()
@@ -415,12 +417,12 @@ fun DashboardScreen(
                     )
                     Column {
                         Text(
-                            text = "Routing: ${routingStatus.effectiveMode.name} Mode",
+                            text = stringResource(R.string.routing_mode_banner, routingStatus.effectiveMode.name),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = if (isOperational) "Tap to manage Shizuku / Root routing" else "Tap to configure Shizuku, Root, or Notification access",
+                            text = if (isOperational) stringResource(R.string.routing_manage_operational) else stringResource(R.string.routing_configure_required),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -438,11 +440,11 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Acoustic Response Curve",
+                    text = stringResource(R.string.acoustic_response_curve),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = if (settings.eqMode == EQMode.GRAPHIC_10) "10-Band Graphic" else "${settings.bands.size}-Band Parametric",
+                    text = if (settings.eqMode == EQMode.GRAPHIC_10) stringResource(R.string.mode_graphic_10) else stringResource(R.string.mode_parametric_n, settings.bands.size),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -475,33 +477,33 @@ fun DashboardScreen(
             ) {
                 AssistChip(
                     onClick = { showAiEqDialog = true },
-                    label = { Text("AI Assistant") },
+                    label = { Text(stringResource(R.string.action_ai_assistant)) },
                     leadingIcon = { Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                     colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
                 )
 
                 AssistChip(
                     onClick = { showAutoEqDialog = true },
-                    label = { Text("AutoEq Profiles") },
+                    label = { Text(stringResource(R.string.action_autoeq_profiles)) },
                     leadingIcon = { Icon(Icons.Default.Headphones, contentDescription = null) },
                     colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.35f))
                 )
 
                 AssistChip(
                     onClick = { showSavePresetDialog = true },
-                    label = { Text("Save Preset") },
+                    label = { Text(stringResource(R.string.action_save_preset)) },
                     leadingIcon = { Icon(Icons.Default.BookmarkAdd, contentDescription = null) }
                 )
 
                 AssistChip(
                     onClick = { showImportExportDialog = true },
-                    label = { Text("Peace / APO Import") },
+                    label = { Text(stringResource(R.string.action_peace_import)) },
                     leadingIcon = { Icon(Icons.Default.ImportExport, contentDescription = null) }
                 )
 
                 AssistChip(
                     onClick = onResetBands,
-                    label = { Text("Reset Flat") },
+                    label = { Text(stringResource(R.string.action_reset_flat)) },
                     leadingIcon = { Icon(Icons.Default.RestartAlt, contentDescription = null) }
                 )
             }
@@ -511,7 +513,7 @@ fun DashboardScreen(
         // 6. Preset Quick Chips Bar (Preset Library right above the EQ)
         item {
             Text(
-                text = "Preset Library",
+                text = stringResource(R.string.preset_library_title),
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(6.dp))
@@ -542,7 +544,7 @@ fun DashboardScreen(
 
         // 7. EQ Mode Tab Bar
         item {
-            val tabs = listOf("10-Band Graphic", "Parametric EQ")
+            val tabs = listOf(stringResource(R.string.mode_graphic_10), "Parametric EQ")
             val selectedIndex = if (settings.eqMode == EQMode.PARAMETRIC) 1 else 0
 
             PrimaryTabRow(
@@ -616,7 +618,7 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Parametric Filters (${settings.bands.size})",
+                        text = stringResource(R.string.parametric_filters_header, settings.bands.size),
                         style = MaterialTheme.typography.titleMedium
                     )
                     OutlinedButton(
@@ -625,7 +627,7 @@ fun DashboardScreen(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Add Band")
+                        Text(stringResource(R.string.action_add_band))
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))

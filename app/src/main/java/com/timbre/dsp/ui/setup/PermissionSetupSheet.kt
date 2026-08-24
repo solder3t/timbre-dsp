@@ -50,8 +50,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import com.timbre.dsp.R
 import com.timbre.dsp.model.PermissionStatus
 import com.timbre.dsp.permission.PermissionManager
 import com.timbre.dsp.ui.components.GlassmorphicCard
@@ -113,11 +115,11 @@ fun PermissionSetupSheet(
         ) {
             Column {
                 Text(
-                    text = "System Permissions & Tools",
+                    text = stringResource(R.string.setup_header_title),
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    text = "Configure routing permissions, sleep timer, and backups",
+                    text = stringResource(R.string.setup_header_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -148,11 +150,11 @@ fun PermissionSetupSheet(
                         Icon(Icons.Default.Bedtime, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text("DSP Sleep Timer", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.sleep_timer_title), style = MaterialTheme.typography.titleMedium)
                             val minutes = sleepTimerSeconds / 60
                             val seconds = sleepTimerSeconds % 60
                             Text(
-                                text = if (isSleepTimerRunning) "Auto-bypass in ${minutes}m ${seconds}s" else "Automatically pause DSP for bedtime listening",
+                                text = if (isSleepTimerRunning) stringResource(R.string.sleep_timer_running, "${minutes}m ${seconds}s") else stringResource(R.string.sleep_timer_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -175,7 +177,7 @@ fun PermissionSetupSheet(
                     }
                     if (isSleepTimerRunning) {
                         OutlinedButton(onClick = onCancelSleepTimer) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.btn_cancel_timer))
                         }
                     }
                 }
@@ -235,10 +237,10 @@ fun PermissionSetupSheet(
 
         // 3. Shizuku Integration Card
         SetupItemCard(
-            title = "Shizuku Integration",
+            title = stringResource(R.string.perm_shizuku_title),
             subtitle = if (permissionStatus.hasShizukuPermission) "Shizuku binder connected & permission granted"
             else if (permissionStatus.isShizukuRunning) "Shizuku is running, permission required"
-            else "Shizuku service is not running or not installed",
+            else stringResource(R.string.perm_shizuku_desc),
             isConfigured = permissionStatus.hasShizukuPermission,
             icon = Icons.Default.Security,
             hazeState = hazeState
@@ -249,14 +251,14 @@ fun PermissionSetupSheet(
                     enabled = permissionStatus.isShizukuRunning && !permissionStatus.hasShizukuPermission,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(if (permissionStatus.hasShizukuPermission) "Authorized" else "Authorize Shizuku")
+                    Text(if (permissionStatus.hasShizukuPermission) stringResource(R.string.status_granted) else stringResource(R.string.btn_grant_permission))
                 }
                 if (permissionStatus.hasShizukuPermission && !permissionStatus.hasDumpPermission) {
                     OutlinedButton(
                         onClick = onGrantDumpShizuku,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Grant DUMP Hook")
+                        Text(stringResource(R.string.btn_grant_dump))
                     }
                 }
             }
@@ -266,10 +268,10 @@ fun PermissionSetupSheet(
 
         // 4. Root Access Card
         SetupItemCard(
-            title = "Root Access & Magisk Engine",
+            title = stringResource(R.string.perm_root_title),
             subtitle = if (permissionStatus.hasRootPermission) "Root access granted (SU active)"
             else if (permissionStatus.isRootAvailable) "Root detected, permissions pending"
-            else "Standard unrooted device",
+            else stringResource(R.string.perm_root_desc),
             isConfigured = permissionStatus.hasRootPermission,
             icon = Icons.Default.FlashOn,
             hazeState = hazeState
@@ -287,7 +289,7 @@ fun PermissionSetupSheet(
                     onClick = { showMagiskDialog = true },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Magisk / KSU Module")
+                    Text(stringResource(R.string.btn_install_module))
                 }
             }
         }
@@ -296,9 +298,9 @@ fun PermissionSetupSheet(
 
         // 5. Notification Access Card
         SetupItemCard(
-            title = "Notification / Media Access",
+            title = stringResource(R.string.perm_notif_title),
             subtitle = if (permissionStatus.hasNotificationAccess) "Notification listener active for media detection"
-            else "Required to auto-detect media players like Spotify & Apple Music",
+            else stringResource(R.string.perm_notif_desc),
             isConfigured = permissionStatus.hasNotificationAccess,
             icon = Icons.Default.Notifications,
             hazeState = hazeState
@@ -308,7 +310,7 @@ fun PermissionSetupSheet(
                 enabled = !permissionStatus.hasNotificationAccess,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (permissionStatus.hasNotificationAccess) "Active" else "Grant Media Notification Access")
+                Text(if (permissionStatus.hasNotificationAccess) stringResource(R.string.status_enabled) else stringResource(R.string.btn_open_settings))
             }
         }
 
@@ -316,9 +318,9 @@ fun PermissionSetupSheet(
 
         // 6. Battery Optimization Card
         SetupItemCard(
-            title = "Battery Unrestricted Mode",
+            title = stringResource(R.string.perm_battery_title),
             subtitle = if (permissionStatus.isBatteryOptimizationIgnored) "Battery optimization disabled for seamless background DSP"
-            else "Disable battery optimizations so Android does not kill the DSP audio daemon",
+            else stringResource(R.string.perm_battery_desc),
             isConfigured = permissionStatus.isBatteryOptimizationIgnored,
             icon = Icons.Default.BatteryChargingFull,
             hazeState = hazeState
@@ -328,7 +330,7 @@ fun PermissionSetupSheet(
                 enabled = !permissionStatus.isBatteryOptimizationIgnored,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (permissionStatus.isBatteryOptimizationIgnored) "Ignored (Optimal)" else "Request Unrestricted Battery")
+                Text(if (permissionStatus.isBatteryOptimizationIgnored) stringResource(R.string.status_ignored) else stringResource(R.string.btn_disable_optimization))
             }
         }
 
@@ -344,11 +346,11 @@ fun PermissionSetupSheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Terminal, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Manual ADB Fallback (No Root / No Shizuku)", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.adb_command_title), style = MaterialTheme.typography.titleMedium)
                 }
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "If Shizuku or Root is unavailable, run this single command once via ADB on your PC:",
+                    text = stringResource(R.string.adb_command_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

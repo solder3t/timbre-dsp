@@ -37,7 +37,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.timbre.dsp.R
 import com.timbre.dsp.audio.InstalledAppItem
 import com.timbre.dsp.model.EQPreset
 
@@ -71,7 +73,7 @@ fun AddAppProfileDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Apps, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Add Per-App Auto Profile")
+                Text(stringResource(R.string.dialog_add_app_title))
             }
         },
         text = {
@@ -80,7 +82,7 @@ fun AddAppProfileDialog(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search installed apps...") },
+                    placeholder = { Text(stringResource(R.string.dialog_search_apps_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -202,12 +204,12 @@ fun AddAppProfileDialog(
                 },
                 enabled = selectedApp != null
             ) {
-                Text("Add Rule")
+                Text(stringResource(R.string.btn_add_profile))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

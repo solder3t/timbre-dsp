@@ -55,6 +55,9 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 
+import androidx.compose.ui.res.stringResource
+import com.timbre.dsp.R
+
 data class NavTabItem(
     val title: String,
     val icon: ImageVector
@@ -84,10 +87,10 @@ fun MainScreen(
     val sleepTimerSeconds by viewModel.sleepTimerSeconds.collectAsStateWithLifecycle()
 
     val navTabs = listOf(
-        NavTabItem("Equalizer", Icons.Default.GraphicEq),
-        NavTabItem("Effects", Icons.Default.Tune),
-        NavTabItem("Sessions", Icons.Default.MusicNote),
-        NavTabItem("Setup", Icons.Default.Security)
+        NavTabItem(stringResource(R.string.nav_equalizer), Icons.Default.GraphicEq),
+        NavTabItem(stringResource(R.string.nav_effects), Icons.Default.Tune),
+        NavTabItem(stringResource(R.string.nav_sessions), Icons.Default.MusicNote),
+        NavTabItem(stringResource(R.string.nav_setup), Icons.Default.Security)
     )
 
     val primary = MaterialTheme.colorScheme.primary

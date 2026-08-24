@@ -34,7 +34,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.timbre.dsp.R
 import com.timbre.dsp.model.EQBand
 import com.timbre.dsp.model.FilterType
 import java.util.Locale
@@ -73,7 +75,7 @@ fun ParametricBandEditorDialog(
                         onDeleteBand()
                         onDismiss()
                     }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete Band", tint = MaterialTheme.colorScheme.error)
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.btn_delete_band), tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -90,7 +92,7 @@ fun ParametricBandEditorDialog(
                         value = filterType.name.replace("_", " "),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Filter Geometry") },
+                        label = { Text(stringResource(R.string.dialog_param_filter_type)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeDropdownExpanded) },
                         modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
@@ -184,12 +186,12 @@ fun ParametricBandEditorDialog(
                 onSaveBand(updatedBand)
                 onDismiss()
             }) {
-                Text("Apply")
+                Text(stringResource(R.string.btn_apply))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

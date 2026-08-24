@@ -44,8 +44,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.timbre.dsp.DSPEngine
+import com.timbre.dsp.R
 import com.timbre.dsp.audio.InstalledAppItem
 import com.timbre.dsp.model.AppProfile
 import com.timbre.dsp.model.AudioSessionInfo
@@ -120,17 +122,17 @@ fun SessionsScreen(
             ) {
                 Column {
                     Text(
-                        text = "Active Audio Sessions",
+                        text = stringResource(R.string.sessions_header_title),
                         style = MaterialTheme.typography.headlineSmall
                     )
                     Text(
-                        text = "${activeSessions.size} apps hooked in AudioFlinger",
+                        text = stringResource(R.string.sessions_count_format, activeSessions.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 IconButton(onClick = onRescan) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Rescan")
+                    Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.sessions_rescan))
                 }
             }
         }
@@ -242,7 +244,7 @@ fun SessionsScreen(
         // 2. Discovered Active Player Sessions List
         item {
             Text(
-                text = "Connected Players",
+                text = stringResource(R.string.sessions_active_header, activeSessions.size),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(top = 4.dp)
             )
@@ -268,12 +270,12 @@ fun SessionsScreen(
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         Text(
-                            text = "No active audio sessions detected",
+                            text = stringResource(R.string.sessions_no_active_title),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Start playing music in Spotify, YouTube Music, or Apple Music, or tap Rescan.",
+                            text = stringResource(R.string.sessions_no_active_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                             modifier = Modifier.padding(top = 4.dp)
@@ -309,7 +311,7 @@ fun SessionsScreen(
                     Icon(Icons.Default.Apps, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Configure Per-App Auto-Profiles (${appProfiles.size})",
+                        text = stringResource(R.string.sessions_configure_app_profiles_title, appProfiles.size),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -320,7 +322,7 @@ fun SessionsScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add App Rule")
+                    Text(stringResource(R.string.sessions_add_rule))
                 }
             }
         }
@@ -420,7 +422,7 @@ private fun ConfigureAppProfileCard(
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Delete Profile",
+                        contentDescription = stringResource(R.string.sessions_delete_profile),
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
                     )
                 }

@@ -49,7 +49,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.timbre.dsp.R
 import com.timbre.dsp.data.ImpulseResponseProfile
 import com.timbre.dsp.model.DSPSettings
 import com.timbre.dsp.model.EQPreset
@@ -112,11 +114,11 @@ fun EffectsScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = "Dynamics & Audio Effects",
+            text = stringResource(R.string.effects_master_title),
             style = MaterialTheme.typography.headlineSmall
         )
         Text(
-            text = "Fine-tune acoustics, staging, and dynamics processing",
+            text = stringResource(R.string.effects_master_active),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -140,9 +142,9 @@ fun EffectsScreen(
                     Icon(Icons.Default.Hearing, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Personalized Hearing Calibration", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.effects_section_hearing), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            text = if (settings.hearingAudiogram.isCalibrated) "Audiogram calibrated and active" else "Run the audiogram test to compensate for hearing asymmetry",
+                            text = if (settings.hearingAudiogram.isCalibrated) stringResource(R.string.effects_calibrated_profile) else stringResource(R.string.effects_hearing_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -153,7 +155,7 @@ fun EffectsScreen(
                     onClick = { showHearingWizard = true },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (settings.hearingAudiogram.isCalibrated) "Re-Calibrate Hearing Test" else "Start Hearing Calibration Test")
+                    Text(if (settings.hearingAudiogram.isCalibrated) stringResource(R.string.effects_retake_hearing_test) else stringResource(R.string.effects_perform_hearing_test))
                 }
             }
         }
@@ -179,9 +181,9 @@ fun EffectsScreen(
                         Icon(Icons.Default.SurroundSound, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text("Convolution / Impulse Response", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.effects_section_convolution), style = MaterialTheme.typography.titleMedium)
                             Text(
-                                "Studio acoustics, tube amps, & .irs models",
+                                stringResource(R.string.effects_convolution_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -198,7 +200,7 @@ fun EffectsScreen(
 
                     val currentIRName = irProfiles.find { it.id == settings.activeConvolutionId }?.name ?: "Warm Studio Room"
 
-                    Text("Impulse Response Profile:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.effects_active_ir), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(4.dp))
 
                     ExposedDropdownMenuBox(
@@ -236,8 +238,8 @@ fun EffectsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Wet / Dry Ratio", style = MaterialTheme.typography.bodySmall)
-                        Text("${(settings.convolutionWetDry * 100).toInt()}% Wet", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.effects_wet_dry_mix), style = MaterialTheme.typography.bodySmall)
+                        Text("${(settings.convolutionWetDry * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
                     }
                     Slider(
                         value = settings.convolutionWetDry,
@@ -256,7 +258,7 @@ fun EffectsScreen(
                     ) {
                         Icon(Icons.Default.FileUpload, contentDescription = null)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Import Custom .wav / .irs File")
+                        Text(stringResource(R.string.effects_import_custom_ir))
                     }
                 }
             }
@@ -280,9 +282,9 @@ fun EffectsScreen(
                         Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text("Pre-Amp Gain", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.effects_section_dynamics), style = MaterialTheme.typography.titleMedium)
                             Text(
-                                if (settings.autoPreampEnabled) "Auto-Trim Protection Active" else "Master input attenuation / boost",
+                                if (settings.autoPreampEnabled) stringResource(R.string.effects_auto_preamp_desc) else stringResource(R.string.effects_limiter_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -316,9 +318,9 @@ fun EffectsScreen(
                         Icon(Icons.Default.Shield, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text("Auto-Preamp (Headroom Guard)", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.effects_auto_preamp_title), style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                "Prevents digital clipping when boosting EQ",
+                                stringResource(R.string.effects_auto_preamp_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -342,9 +344,9 @@ fun EffectsScreen(
                         Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text("Anti-Clipping Peak Limiter", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.effects_limiter_title), style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                "Prevents digital distortion & speaker damage",
+                                stringResource(R.string.effects_limiter_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -371,9 +373,9 @@ fun EffectsScreen(
                     Icon(Icons.Default.Balance, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text("Stereo Channel Balance", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.effects_balance_title), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Adjust Left / Right listening distribution",
+                            stringResource(R.string.effects_balance_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -386,9 +388,9 @@ fun EffectsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Left ${if (settings.channelBalance < 0) String.format(Locale.US, "%.0f%%", -settings.channelBalance * 100) else ""}", style = MaterialTheme.typography.bodySmall)
-                    Text("Center", style = MaterialTheme.typography.bodySmall)
-                    Text("Right ${if (settings.channelBalance > 0) String.format(Locale.US, "%.0f%%", settings.channelBalance * 100) else ""}", style = MaterialTheme.typography.bodySmall)
+                    Text("${stringResource(R.string.effects_label_left)} ${if (settings.channelBalance < 0) String.format(Locale.US, "%.0f%%", -settings.channelBalance * 100) else ""}", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.effects_label_center), style = MaterialTheme.typography.bodySmall)
+                    Text("${stringResource(R.string.effects_label_right)} ${if (settings.channelBalance > 0) String.format(Locale.US, "%.0f%%", settings.channelBalance * 100) else ""}", style = MaterialTheme.typography.bodySmall)
                 }
 
                 Slider(
@@ -406,9 +408,9 @@ fun EffectsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Text("Mono Audio Sum", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.effects_force_mono_title), style = MaterialTheme.typography.bodyMedium)
                         Text(
-                            "Combine Left and Right into mono stream",
+                            stringResource(R.string.effects_force_mono_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -442,9 +444,9 @@ fun EffectsScreen(
                         Icon(Icons.Default.Speaker, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text("Sub-Bass Enhancer", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.effects_bass_boost_title), style = MaterialTheme.typography.titleMedium)
                             Text(
-                                "Dynamic low-shelf harmonic boost",
+                                stringResource(R.string.effects_bass_boost_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -462,7 +464,7 @@ fun EffectsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Bass Gain", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.effects_strength), style = MaterialTheme.typography.bodySmall)
                         Text(String.format(Locale.US, "+%.1f dB", settings.bassBoostGain), style = MaterialTheme.typography.bodySmall)
                     }
                     Slider(
@@ -476,7 +478,7 @@ fun EffectsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Cutoff Frequency", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.effects_cutoff_frequency), style = MaterialTheme.typography.bodySmall)
                         Text(String.format(Locale.US, "%.0f Hz", settings.bassBoostCutoffFreq), style = MaterialTheme.typography.bodySmall)
                     }
                     Slider(
@@ -510,9 +512,9 @@ fun EffectsScreen(
                         Icon(Icons.Default.Headphones, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text("Binaural Crossfeed (Chu Moy)", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.effects_crossfeed_title), style = MaterialTheme.typography.titleMedium)
                             Text(
-                                "Reduces headphone listening fatigue",
+                                stringResource(R.string.effects_crossfeed_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -530,7 +532,7 @@ fun EffectsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Crossfeed Strength", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.effects_strength), style = MaterialTheme.typography.bodySmall)
                         Text("${(settings.crossfeedStrength * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
                     }
                     Slider(
@@ -549,9 +551,9 @@ fun EffectsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Text("3D Spatial Widener", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.effects_virtualizer_title), style = MaterialTheme.typography.bodyMedium)
                         Text(
-                            "Expands soundstage geometry",
+                            stringResource(R.string.effects_virtualizer_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -594,9 +596,9 @@ fun EffectsScreen(
                         Icon(Icons.Default.GraphicEq, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
-                            Text("High-Frequency Clarity", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.effects_clarity_title), style = MaterialTheme.typography.titleMedium)
                             Text(
-                                "Restores brilliance and air in vocals",
+                                stringResource(R.string.effects_clarity_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
