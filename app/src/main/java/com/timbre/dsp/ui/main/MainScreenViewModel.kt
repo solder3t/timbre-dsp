@@ -199,6 +199,10 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
         pushSettings(_settings.value.copy(targetCurve = curve))
     }
 
+    fun applyAiSettings(newSettings: DSPSettings) {
+        pushSettings(newSettings)
+    }
+
     fun setChannelBalance(balance: Float) {
         pushSettings(_settings.value.copy(channelBalance = balance))
     }

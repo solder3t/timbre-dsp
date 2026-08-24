@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Headphones
@@ -66,11 +67,14 @@ import com.timbre.dsp.model.EQMode
 import com.timbre.dsp.model.EQPreset
 import com.timbre.dsp.model.PermissionStatus
 import com.timbre.dsp.model.TargetCurve
+import com.timbre.dsp.ui.components.AiEqDialog
 import com.timbre.dsp.ui.components.AutoEqDialog
 import com.timbre.dsp.ui.components.EQCurveVisualizer
+import com.timbre.dsp.ui.components.GlassmorphicCard
 import com.timbre.dsp.ui.components.ImportExportDialog
 import com.timbre.dsp.ui.components.ParametricBandEditorDialog
 import com.timbre.dsp.ui.components.SavePresetDialog
+import dev.chrisbanes.haze.HazeState
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,13 +101,26 @@ fun DashboardScreen(
     onBindCurrentDevice: () -> Unit,
     onSetTargetCurve: (TargetCurve) -> Unit,
     onNavigateToSetup: () -> Unit,
+    onApplyAiSettings: (DSPSettings) -> Unit = {},
+    hazeState: HazeState? = null,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
+    var showAiEqDialog by remember { mutableStateOf(false) }
     var showAutoEqDialog by remember { mutableStateOf(false) }
     var showSavePresetDialog by remember { mutableStateOf(false) }
     var showImportExportDialog by remember { mutableStateOf(false) }
     var editingParametricBand by remember { mutableStateOf<EQBand?>(null) }
+
+    if (showAiEqDialog) {
+        AiEqDialog(
+            currentSettings = settings,
+            onDismiss = { showAiEqDialog = false },
+            onApplySettings = { newSettings ->
+                onApplyAiSettings(newSettings)
+            }
+        )
+    }
 
     if (showAutoEqDialog) {
         AutoEqDialog(
@@ -111,6 +128,9 @@ fun DashboardScreen(
             onSelectProfile = { profile ->
                 onApplyAutoEq(profile)
                 showAutoEqDialog = false
+            },
+            onAiGenerate = { query ->
+                showAiEqDialog = true
             }
         )
     }
@@ -165,17 +185,15 @@ fun DashboardScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // 1. Master Switch Card
+        // 1. Master Switch Card with Frosted Glass
         item {
-            Card(
+            GlassmorphicCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (settings.isEnabled)
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                    else
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
+                hazeState = hazeState,
+                containerColor = if (settings.isEnabled)
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+                else
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             ) {
                 Row(
                     modifier = Modifier
@@ -226,13 +244,14 @@ fun DashboardScreen(
         // 2. Active Device Banner
         if (currentDevice != null) {
             item {
-                Surface(
+                GlassmorphicCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+                    hazeState = hazeState,
+                    shape = RoundedCornerShape(12.dp),
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -241,7 +260,7 @@ fun DashboardScreen(
                                 imageVector = if (currentDevice.deviceType.name.contains("BLUETOOTH")) Icons.Default.Headphones else Icons.Default.Speaker,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(end = 8.dp)
+                                modifier = Modifier.padding(end = 10.dp)
                             )
                             Column {
                                 Text(
@@ -267,22 +286,21 @@ fun DashboardScreen(
         // 3. Routing Status Card
         item {
             val isOperational = permissionStatus.hasShizukuPermission || permissionStatus.hasRootPermission || permissionStatus.hasDumpPermission
-            Card(
+            GlassmorphicCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onNavigateToSetup() },
+                hazeState = hazeState,
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isOperational)
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                    else
-                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
-                )
+                containerColor = if (isOperational)
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                else
+                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.45f)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
+                        .padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -342,7 +360,7 @@ fun DashboardScreen(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // 5. Presets, AutoEq, and Peace EQ Action Row
+        // 5. Presets, AI Assistant, AutoEq, and Action Row
         item {
             Row(
                 modifier = Modifier
@@ -352,10 +370,17 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AssistChip(
+                    onClick = { showAiEqDialog = true },
+                    label = { Text("AI Assistant") },
+                    leadingIcon = { Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                    colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+                )
+
+                AssistChip(
                     onClick = { showAutoEqDialog = true },
                     label = { Text("AutoEq Profiles") },
                     leadingIcon = { Icon(Icons.Default.Headphones, contentDescription = null) },
-                    colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+                    colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.35f))
                 )
 
                 AssistChip(

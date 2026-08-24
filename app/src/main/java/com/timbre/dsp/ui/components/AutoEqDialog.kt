@@ -1,6 +1,7 @@
 package com.timbre.dsp.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,9 +13,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -36,7 +40,8 @@ import com.timbre.dsp.model.AutoEqProfile
 @Composable
 fun AutoEqDialog(
     onDismiss: () -> Unit,
-    onSelectProfile: (AutoEqProfile) -> Unit
+    onSelectProfile: (AutoEqProfile) -> Unit,
+    onAiGenerate: ((String) -> Unit)? = null
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val filteredProfiles = remember(searchQuery) {
@@ -70,32 +75,64 @@ fun AutoEqDialog(
                     singleLine = true
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                LazyColumn(modifier = Modifier.fillMaxWidth().height(260.dp)) {
-                    items(filteredProfiles) { profile ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clickable {
-                                    onSelectProfile(profile)
-                                    onDismiss()
-                                },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            )
+
+                if (filteredProfiles.isEmpty() && searchQuery.isNotBlank()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = profile.model,
-                                    style = MaterialTheme.typography.titleMedium
+                            Text(
+                                text = "Model not found in offline AutoEq database.",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            if (onAiGenerate != null) {
+                                Button(
+                                    onClick = {
+                                        onAiGenerate(searchQuery)
+                                        onDismiss()
+                                    }
+                                ) {
+                                    Icon(Icons.Default.AutoAwesome, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("AI AutoEQ Generate")
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxWidth().height(260.dp)) {
+                        items(filteredProfiles) { profile ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clickable {
+                                        onSelectProfile(profile)
+                                        onDismiss()
+                                    },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                 )
-                                Row {
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
                                     Text(
-                                        text = "${profile.brand} • ${profile.source}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        text = profile.model,
+                                        style = MaterialTheme.typography.titleMedium
                                     )
+                                    Row {
+                                        Text(
+                                            text = "${profile.brand} • ${profile.source}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
                             }
                         }

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -19,19 +20,28 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.timbre.dsp.ui.dashboard.DashboardScreen
 import com.timbre.dsp.ui.effects.EffectsScreen
 import com.timbre.dsp.ui.sessions.SessionsScreen
 import com.timbre.dsp.ui.setup.PermissionSetupSheet
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
 
+@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: MainScreenViewModel = viewModel()
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
+    val hazeState = remember { HazeState() }
 
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val permissionStatus by viewModel.permissionStatus.collectAsStateWithLifecycle()
@@ -49,7 +59,14 @@ fun MainScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                modifier = Modifier.hazeEffect(
+                    state = hazeState,
+                    style = HazeMaterials.thin(MaterialTheme.colorScheme.surface.copy(alpha = 0.75f))
+                ),
+                containerColor = Color.Transparent,
+                tonalElevation = 0.dp
+            ) {
                 NavigationBarItem(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
@@ -80,6 +97,7 @@ fun MainScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .hazeSource(state = hazeState)
                 .padding(innerPadding)
         ) {
             when (selectedTab) {
@@ -104,7 +122,9 @@ fun MainScreen(
                     onSaveCustomPreset = { viewModel.saveCustomPreset(it) },
                     onBindCurrentDevice = { viewModel.bindPresetToCurrentDevice(settings.currentPresetId) },
                     onSetTargetCurve = { viewModel.setTargetCurve(it) },
-                    onNavigateToSetup = { selectedTab = 3 }
+                    onNavigateToSetup = { selectedTab = 3 },
+                    onApplyAiSettings = { viewModel.applyAiSettings(it) },
+                    hazeState = hazeState
                 )
                 1 -> EffectsScreen(
                     settings = settings,

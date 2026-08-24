@@ -155,4 +155,36 @@ class DSPRepositoryTest {
     assertEquals(numSamples, parsed.rightChannel.size)
     assertTrue(parsed.leftChannel[0] > 0.5f) // Normalized peak near 0.89
   }
+
+  @Test
+  fun testAiClientDefaultsAndModels() {
+    val geminiDefault = com.timbre.dsp.data.api.AiClient.getDefaultModel(com.timbre.dsp.data.api.AiProvider.GEMINI)
+    assertEquals("gemini-3.6-flash", geminiDefault)
+
+    val groqModels = com.timbre.dsp.data.api.AiClient.getAvailableModels(com.timbre.dsp.data.api.AiProvider.GROQ)
+    assertTrue(groqModels.any { it.id.contains("gpt-oss-120b") })
+  }
+
+  @Test
+  fun testAiEqAssistantApplyToSettings() {
+    val aiResponse = com.timbre.dsp.data.api.AiEqResponse(
+      title = "Warm Studio Acoustic",
+      description = "Rich velvety bass with crystal vocals",
+      bands = listOf(3.5f, 2.0f, 1.0f, 0.0f, 0.0f, 0.5f, 1.5f, 2.0f, 2.5f, 3.0f),
+      preamp = -3.5f,
+      bassBoost = 500,
+      clarityBoost = 400
+    )
+
+    val initialSettings = DSPSettings(eqMode = EQMode.GRAPHIC_10)
+    val applied = com.timbre.dsp.audio.AiEqAssistant.applyToSettings(aiResponse, initialSettings)
+
+    assertEquals(-3.5f, applied.preampGain, 0.01f)
+    assertEquals(3.5f, applied.bands[0].gain, 0.01f)
+    assertTrue(applied.bassBoostEnabled)
+    assertEquals(6.0f, applied.bassBoostGain, 0.01f)
+    assertTrue(applied.clarityEnabled)
+    assertEquals(4.8f, applied.clarityGain, 0.01f)
+    assertTrue(applied.currentPresetId.contains("warm_studio_acoustic"))
+  }
 }
