@@ -398,23 +398,45 @@ fun DashboardScreen(
 
         // 7. Equalizer Controls (Graphic Sliders vs Parametric Band List)
         if (settings.eqMode != EQMode.PARAMETRIC) {
-            // Graphic 10-Band EQ Sliders
-            item {
+            // Classic Full-Width Horizontal Band Rows
+            items(settings.bands.size) { index ->
+                val band = settings.bands[index]
+                val label = formatFrequency(band.frequency)
+
                 Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(vertical = 2.dp)
                 ) {
-                    settings.bands.forEach { band ->
-                        BandSliderColumn(
-                            band = band,
-                            isEnabled = settings.isEnabled,
-                            onGainChange = { newGain ->
-                                onBandGainChange(band.index, newGain)
-                            }
-                        )
-                    }
+                    Text(
+                        text = label,
+                        modifier = Modifier.width(64.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Slider(
+                        value = band.gain,
+                        onValueChange = {
+                            if (it == 0f) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onBandGainChange(index, (it * 2).toInt() / 2f)
+                        },
+                        valueRange = -15f..15f,
+                        enabled = settings.isEnabled,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp)
+                    )
+
+                    Text(
+                        text = "${if (band.gain > 0) "+" else ""}${String.format(Locale.ROOT, "%.1f", band.gain)} dB",
+                        modifier = Modifier.width(68.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.End,
+                        color = if (band.gain > 0) MaterialTheme.colorScheme.primary else if (band.gain < 0) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (band.gain != 0f) FontWeight.SemiBold else FontWeight.Normal
+                    )
                 }
             }
         } else {
@@ -482,58 +504,6 @@ fun DashboardScreen(
             }
             Spacer(modifier = Modifier.height(32.dp))
         }
-    }
-}
-
-@Composable
-private fun BandSliderColumn(
-    band: EQBand,
-    isEnabled: Boolean,
-    onGainChange: (Float) -> Unit
-) {
-    val haptic = LocalHapticFeedback.current
-    val freqLabel = formatFrequency(band.frequency)
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .width(58.dp)
-            .padding(vertical = 4.dp)
-    ) {
-        Text(
-            text = "${if (band.gain > 0) "+" else ""}${String.format(Locale.ROOT, "%.1f", band.gain)}",
-            style = MaterialTheme.typography.labelSmall,
-            color = if (band.gain != 0f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = if (band.gain != 0f) FontWeight.Bold else FontWeight.Normal
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Box(
-            modifier = Modifier.height(160.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Slider(
-                value = band.gain,
-                onValueChange = {
-                    onGainChange((it * 2).toInt() / 2f)
-                },
-                valueRange = -15f..15f,
-                enabled = isEnabled,
-                modifier = Modifier
-                    .height(160.dp)
-                    .width(42.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = freqLabel,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }
 
