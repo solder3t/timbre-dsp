@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import com.timbre.dsp.R
 import com.timbre.dsp.theme.ThemeMode
 import com.timbre.dsp.theme.ThemeSettings
+import com.timbre.dsp.ui.utils.WindowWidthClass
+import com.timbre.dsp.ui.utils.rememberWindowWidthClass
 import dev.chrisbanes.haze.HazeState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,6 +60,9 @@ fun AppearanceSettingsPage(
     onBack: () -> Unit,
     hazeState: HazeState? = null
 ) {
+    val windowWidthClass = rememberWindowWidthClass()
+    val isCompact = windowWidthClass == WindowWidthClass.COMPACT
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -100,35 +105,61 @@ fun AppearanceSettingsPage(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    ThemeMode.values().forEach { mode ->
-                        val isSelected = themeSettings.themeMode == mode
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = { onSetThemeMode(mode) },
-                            label = {
-                                Text(
-                                    when (mode) {
-                                        ThemeMode.SYSTEM -> stringResource(R.string.theme_mode_system)
-                                        ThemeMode.DARK -> stringResource(R.string.theme_mode_dark)
-                                        ThemeMode.LIGHT -> stringResource(R.string.theme_mode_light)
-                                        ThemeMode.AMOLED -> stringResource(R.string.theme_mode_amoled)
-                                    }
-                                )
-                            },
-                            leadingIcon = {
-                                when (mode) {
-                                    ThemeMode.SYSTEM -> Icon(Icons.Default.Brightness4, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    ThemeMode.DARK -> Icon(Icons.Default.DarkMode, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    ThemeMode.LIGHT -> Icon(Icons.Default.LightMode, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    ThemeMode.AMOLED -> Icon(Icons.Default.DarkMode, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Black)
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
+                if (isCompact) {
+                    // 2x2 Adaptive Grid on Compact Screens so text never wraps or clips
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            ThemeModeChip(
+                                mode = ThemeMode.SYSTEM,
+                                isSelected = themeSettings.themeMode == ThemeMode.SYSTEM,
+                                onSelect = { onSetThemeMode(ThemeMode.SYSTEM) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            ThemeModeChip(
+                                mode = ThemeMode.DARK,
+                                isSelected = themeSettings.themeMode == ThemeMode.DARK,
+                                onSelect = { onSetThemeMode(ThemeMode.DARK) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            ThemeModeChip(
+                                mode = ThemeMode.LIGHT,
+                                isSelected = themeSettings.themeMode == ThemeMode.LIGHT,
+                                onSelect = { onSetThemeMode(ThemeMode.LIGHT) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            ThemeModeChip(
+                                mode = ThemeMode.AMOLED,
+                                isSelected = themeSettings.themeMode == ThemeMode.AMOLED,
+                                onSelect = { onSetThemeMode(ThemeMode.AMOLED) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                } else {
+                    // 1x4 Row on Medium / Expanded Screens (Tablets / Foldables)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ThemeMode.values().forEach { mode ->
+                            ThemeModeChip(
+                                mode = mode,
+                                isSelected = themeSettings.themeMode == mode,
+                                onSelect = { onSetThemeMode(mode) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
             }
@@ -203,6 +234,40 @@ fun AppearanceSettingsPage(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(96.dp))
     }
+}
+
+@Composable
+private fun ThemeModeChip(
+    mode: ThemeMode,
+    isSelected: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    FilterChip(
+        selected = isSelected,
+        onClick = onSelect,
+        label = {
+            Text(
+                text = when (mode) {
+                    ThemeMode.SYSTEM -> stringResource(R.string.theme_mode_system)
+                    ThemeMode.DARK -> stringResource(R.string.theme_mode_dark)
+                    ThemeMode.LIGHT -> stringResource(R.string.theme_mode_light)
+                    ThemeMode.AMOLED -> stringResource(R.string.theme_mode_amoled)
+                },
+                maxLines = 1,
+                softWrap = false
+            )
+        },
+        leadingIcon = {
+            when (mode) {
+                ThemeMode.SYSTEM -> Icon(Icons.Default.Brightness4, contentDescription = null, modifier = Modifier.size(16.dp))
+                ThemeMode.DARK -> Icon(Icons.Default.DarkMode, contentDescription = null, modifier = Modifier.size(16.dp))
+                ThemeMode.LIGHT -> Icon(Icons.Default.LightMode, contentDescription = null, modifier = Modifier.size(16.dp))
+                ThemeMode.AMOLED -> Icon(Icons.Default.DarkMode, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Black)
+            }
+        },
+        modifier = modifier
+    )
 }

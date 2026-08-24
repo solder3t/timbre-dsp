@@ -236,12 +236,14 @@ fun AboutSettingsPage(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.SystemUpdate, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text("Update Center", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Update Center", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         Text(
                             "Official releases tracked via GitHub Releases API",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 }
