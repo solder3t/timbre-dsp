@@ -433,10 +433,6 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
         com.timbre.dsp.theme.ThemeRepository.setSeedColor(seed, getApplication())
     }
 
-    fun setFrostedGlass(enable: Boolean) {
-        com.timbre.dsp.theme.ThemeRepository.setEnableFrostedGlass(enable, getApplication())
-    }
-
     fun setRoutingMode(mode: RoutingMode) {
         pushSettings(_settings.value.copy(routingMode = mode))
         routingManager.setMode(mode)

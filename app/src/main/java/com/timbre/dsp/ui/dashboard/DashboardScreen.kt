@@ -73,6 +73,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.timbre.dsp.R
 import com.timbre.dsp.model.OutputDeviceType
@@ -235,15 +236,14 @@ fun DashboardScreen(
                 start = 16.dp,
                 end = 16.dp,
                 top = 16.dp,
-                bottom = 90.dp
+                bottom = 16.dp
             ),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-        // 1. Master Switch Card with Frosted Glass
+        // 1. Master Switch Card
         item {
             GlassmorphicCard(
                 modifier = Modifier.fillMaxWidth(),
-                hazeState = hazeState,
                 containerColor = if (settings.isEnabled)
                     MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
                 else
@@ -256,23 +256,32 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
                             imageVector = Icons.Default.PowerSettingsNew,
                             contentDescription = null,
                             tint = if (settings.isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f, fill = false)) {
                             Text(
                                 text = if (settings.isEnabled) stringResource(R.string.dsp_engine_active) else stringResource(R.string.dsp_engine_bypassed),
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             val presetName = presets.find { it.id == settings.currentPresetId }?.name ?: settings.currentPresetId.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
                             Text(
                                 text = stringResource(R.string.dsp_preset_summary, presetName, String.format(Locale.ROOT, "%.1f", settings.preampGain)),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -304,7 +313,6 @@ fun DashboardScreen(
 
                 GlassmorphicCard(
                     modifier = Modifier.fillMaxWidth(),
-                    hazeState = hazeState,
                     shape = RoundedCornerShape(16.dp),
                     containerColor = if (boundPreset != null)
                         MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f)
@@ -320,7 +328,9 @@ fun DashboardScreen(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -346,12 +356,13 @@ fun DashboardScreen(
 
                             Spacer(modifier = Modifier.width(12.dp))
 
-                            Column {
+                            Column(modifier = Modifier.weight(1f, fill = false)) {
                                 Text(
                                     text = currentDevice.deviceName,
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 if (boundPreset != null) {
                                     Row(
@@ -369,14 +380,18 @@ fun DashboardScreen(
                                             text = stringResource(R.string.device_auto_preset_bound, boundPreset.name),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.Medium,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 } else {
                                     Text(
                                         text = stringResource(R.string.device_auto_routing_active, currentDevice.deviceType.displayName),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -400,7 +415,9 @@ fun DashboardScreen(
                                 Text(
                                     text = if (isBoundToCurrent) stringResource(R.string.action_linked) else stringResource(R.string.action_link_preset),
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    softWrap = false,
+                                    maxLines = 1
                                 )
                             }
 
@@ -432,7 +449,6 @@ fun DashboardScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onNavigateToSetup() },
-                hazeState = hazeState,
                 shape = RoundedCornerShape(12.dp),
                 containerColor = if (isOperational)
                     MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
@@ -451,16 +467,20 @@ fun DashboardScreen(
                         tint = if (isOperational) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(end = 12.dp)
                     )
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = stringResource(R.string.routing_mode_banner, routingStatus.effectiveMode.name),
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = if (isOperational) stringResource(R.string.routing_manage_operational) else stringResource(R.string.routing_configure_required),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -477,12 +497,17 @@ fun DashboardScreen(
             ) {
                 Text(
                     text = stringResource(R.string.acoustic_response_curve),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f).padding(end = 8.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = if (settings.eqMode == EQMode.GRAPHIC_10) stringResource(R.string.mode_graphic_10) else stringResource(R.string.mode_parametric_n, settings.bands.size),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
 
@@ -670,15 +695,18 @@ fun DashboardScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.parametric_filters_header, settings.bands.size),
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f).padding(end = 8.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     OutlinedButton(
                         onClick = onAddParametricBand,
                         contentPadding = ButtonDefaults.ContentPadding
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.action_add_band))
+                        Text(stringResource(R.string.action_add_band), softWrap = false, maxLines = 1)
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -716,7 +744,10 @@ private fun ParametricBandCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
+            ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.primaryContainer,
@@ -729,16 +760,20 @@ private fun ParametricBandCard(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "${formatFrequency(band.frequency)} • ${band.type.name.replace("_", " ")}",
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = "Q: ${String.format(Locale.ROOT, "%.2f", band.q)} • Gain: ${if (band.gain > 0) "+" else ""}${String.format(Locale.ROOT, "%.1f", band.gain)} dB",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

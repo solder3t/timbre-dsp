@@ -16,8 +16,7 @@ data class AccentColorOption(
 data class ThemeSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val useDynamicColor: Boolean = true,
-    val seedColor: Long = 0xFF7B61FF,
-    val enableFrostedGlass: Boolean = false
+    val seedColor: Long = 0xFF7B61FF
 ) {
     companion object {
         val predefinedAccents = listOf(

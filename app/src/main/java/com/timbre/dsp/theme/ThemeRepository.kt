@@ -12,7 +12,6 @@ object ThemeRepository {
     private const val KEY_THEME_MODE = "key_theme_mode"
     private const val KEY_DYNAMIC_COLOR = "key_dynamic_color"
     private const val KEY_SEED_COLOR = "key_seed_color"
-    private const val KEY_FROSTED_GLASS = "key_frosted_glass"
 
     private val _themeSettings = MutableStateFlow(ThemeSettings())
     val themeSettings: StateFlow<ThemeSettings> = _themeSettings.asStateFlow()
@@ -23,13 +22,11 @@ object ThemeRepository {
         val themeMode = try { ThemeMode.valueOf(modeStr ?: ThemeMode.SYSTEM.name) } catch (e: Exception) { ThemeMode.SYSTEM }
         val useDynamicColor = prefs.getBoolean(KEY_DYNAMIC_COLOR, true)
         val seedColor = prefs.getLong(KEY_SEED_COLOR, 0xFF7B61FF)
-        val enableFrostedGlass = prefs.getBoolean(KEY_FROSTED_GLASS, false)
 
         _themeSettings.value = ThemeSettings(
             themeMode = themeMode,
             useDynamicColor = useDynamicColor,
-            seedColor = seedColor,
-            enableFrostedGlass = enableFrostedGlass
+            seedColor = seedColor
         )
     }
 
@@ -48,11 +45,6 @@ object ThemeRepository {
         persist(context)
     }
 
-    fun setEnableFrostedGlass(enable: Boolean, context: Context? = null) {
-        _themeSettings.value = _themeSettings.value.copy(enableFrostedGlass = enable)
-        persist(context)
-    }
-
     private fun persist(context: Context?) {
         if (context == null) return
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -61,7 +53,6 @@ object ThemeRepository {
             .putString(KEY_THEME_MODE, current.themeMode.name)
             .putBoolean(KEY_DYNAMIC_COLOR, current.useDynamicColor)
             .putLong(KEY_SEED_COLOR, current.seedColor)
-            .putBoolean(KEY_FROSTED_GLASS, current.enableFrostedGlass)
             .apply()
     }
 }

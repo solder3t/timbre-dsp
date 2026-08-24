@@ -277,7 +277,6 @@ class DSPRepositoryTest {
     val defaultSettings = com.timbre.dsp.theme.ThemeSettings()
     assertEquals(com.timbre.dsp.theme.ThemeMode.SYSTEM, defaultSettings.themeMode)
     assertTrue(defaultSettings.useDynamicColor)
-    assertFalse(defaultSettings.enableFrostedGlass)
 
     val accents = com.timbre.dsp.theme.ThemeSettings.predefinedAccents
     assertEquals(6, accents.size)

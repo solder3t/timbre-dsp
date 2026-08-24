@@ -64,9 +64,6 @@ import com.timbre.dsp.model.RoutingMode
 import com.timbre.dsp.theme.ThemeMode
 import com.timbre.dsp.theme.ThemeSettings
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
 
 enum class SettingsSubScreen {
     MAIN,
@@ -288,7 +285,7 @@ private fun SettingsOverviewScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -355,38 +352,20 @@ fun SettingsNavigationTile(
     }
 }
 
-@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun SettingsCard(
     hazeState: HazeState? = null,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    if (hazeState != null) {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.Transparent
-            ),
-            modifier = modifier
-                .fillMaxWidth()
-                .hazeEffect(
-                    state = hazeState,
-                    style = HazeMaterials.thin(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                )
-        ) {
-            content()
-        }
-    } else {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            ),
-            modifier = modifier.fillMaxWidth()
-        ) {
-            content()
-        }
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        content()
     }
 }
 
@@ -409,12 +388,20 @@ fun SettingsSwitchRow(
         ) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Column(modifier = Modifier.weight(1f, fill = false)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
         }

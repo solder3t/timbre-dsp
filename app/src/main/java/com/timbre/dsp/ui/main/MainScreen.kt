@@ -1,10 +1,8 @@
 package com.timbre.dsp.ui.main
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MusicNote
@@ -34,6 +31,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,8 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -63,25 +59,18 @@ import com.timbre.dsp.ui.sessions.SessionsScreen
 import com.timbre.dsp.ui.settings.SettingsScreen
 import com.timbre.dsp.ui.utils.WindowWidthClass
 import com.timbre.dsp.ui.utils.rememberWindowWidthClass
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
 
 data class NavTabItem(
     val title: String,
     val icon: ImageVector
 )
 
-@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: MainScreenViewModel = viewModel()
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val hazeState = remember { HazeState() }
     val haptic = LocalHapticFeedback.current
     val windowWidthClass = rememberWindowWidthClass()
     val isCompact = windowWidthClass == WindowWidthClass.COMPACT
@@ -139,8 +128,7 @@ fun MainScreen(
                 onBindCurrentDevice = { viewModel.bindPresetToCurrentDevice(settings.currentPresetId) },
                 onSetTargetCurve = { viewModel.setTargetCurve(it) },
                 onNavigateToSetup = { selectedTab = 3 },
-                onApplyAiSettings = { viewModel.applyAiSettings(it) },
-                hazeState = hazeState
+                onApplyAiSettings = { viewModel.applyAiSettings(it) }
             )
             1 -> EffectsScreen(
                 settings = settings,
@@ -156,8 +144,7 @@ fun MainScreen(
                 onClarityChange = { enabled, gain -> viewModel.setClarity(enabled, gain) },
                 onConvolutionChange = { enabled, profileId, wetDry -> viewModel.setConvolution(enabled, profileId, wetDry) },
                 onImportCustomIR = { uri, name -> viewModel.importCustomIR(uri, name) },
-                onApplyHearingAudiogram = { audiogram, preset -> viewModel.applyHearingAudiogram(audiogram, preset) },
-                hazeState = hazeState
+                onApplyHearingAudiogram = { audiogram, preset -> viewModel.applyHearingAudiogram(audiogram, preset) }
             )
             2 -> SessionsScreen(
                 activeSessions = activeSessions,
@@ -168,8 +155,7 @@ fun MainScreen(
                 onBindAppPreset = { pkg, name, presetId -> viewModel.bindAppToPreset(pkg, name, presetId) },
                 onToggleAppProfile = { pkg, enabled -> viewModel.toggleAppProfile(pkg, enabled) },
                 onUpdateAppProfile = { pkg, presetId, enabled -> viewModel.updateAppProfile(pkg, presetId, enabled) },
-                onRemoveAppProfile = { pkg -> viewModel.removeAppProfile(pkg) },
-                hazeState = hazeState
+                onRemoveAppProfile = { pkg -> viewModel.removeAppProfile(pkg) }
             )
             3 -> SettingsScreen(
                 settings = settings,
@@ -192,68 +178,29 @@ fun MainScreen(
                 onCancelSleepTimer = { viewModel.cancelSleepTimer() },
                 onExportBackup = { viewModel.exportFullBackup(it) },
                 onImportBackup = { viewModel.importFullBackup(it) },
-                onRefresh = { viewModel.refreshPermissions() },
-                hazeState = hazeState
+                onRefresh = { viewModel.refreshPermissions() }
             )
         }
     }
 
     if (isCompact) {
-        // COMPACT: Floating Navigation Bar with Deep Frosted Glass Blur
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-        ) {
-            // 1. Content layer registered as hazeSource so items blur under bottom bar
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .hazeSource(state = hazeState)
-            ) {
-                TabContent()
-            }
-
-            // 2. Glassmorphic bottom bar with increased frosted blur (HazeMaterials.regular)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .hazeEffect(
-                        state = hazeState,
-                        style = HazeMaterials.regular(MaterialTheme.colorScheme.surface.copy(alpha = 0.65f))
-                    )
-                    .navigationBarsPadding()
-            ) {
-                // Shimmer top divider line
-                Box(
+        // COMPACT: Scaffold with standard solid Material 3 NavigationBar
+        Scaffold(
+            bottomBar = {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = onSurface,
+                    tonalElevation = 2.dp,
                     modifier = Modifier
-                        .matchParentSize()
+                        .fillMaxWidth()
                         .drawBehind {
                             drawLine(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        onSurface.copy(alpha = 0.12f),
-                                        primary.copy(alpha = 0.35f),
-                                        onSurface.copy(alpha = 0.12f),
-                                        Color.Transparent
-                                    )
-                                ),
+                                color = onSurface.copy(alpha = 0.08f),
                                 start = Offset(0f, 0f),
                                 end = Offset(size.width, 0f),
                                 strokeWidth = 1.dp.toPx()
                             )
                         }
-                )
-
-                NavigationBar(
-                    containerColor = Color.Transparent,
-                    contentColor = onSurface,
-                    tonalElevation = 0.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(72.dp)
                 ) {
                     navTabs.forEachIndexed { index, tab ->
                         val isSelected = selectedTab == index
@@ -267,24 +214,6 @@ fun MainScreen(
                             label = "tab_icon_scale"
                         )
 
-                        val pillColor by animateColorAsState(
-                            targetValue = if (isSelected) primaryContainer.copy(alpha = 0.90f) else Color.Transparent,
-                            animationSpec = tween(durationMillis = 200),
-                            label = "tab_pill_color"
-                        )
-
-                        val iconTint by animateColorAsState(
-                            targetValue = if (isSelected) onPrimaryContainer else onSurfaceVariant.copy(alpha = 0.70f),
-                            animationSpec = tween(durationMillis = 200),
-                            label = "tab_icon_tint"
-                        )
-
-                        val labelColor by animateColorAsState(
-                            targetValue = if (isSelected) primary else onSurfaceVariant.copy(alpha = 0.65f),
-                            animationSpec = tween(durationMillis = 200),
-                            label = "tab_label_color"
-                        )
-
                         NavigationBarItem(
                             selected = isSelected,
                             onClick = {
@@ -294,32 +223,22 @@ fun MainScreen(
                                 }
                             },
                             icon = {
-                                Box(
+                                Icon(
+                                    imageVector = tab.icon,
+                                    contentDescription = tab.title,
                                     modifier = Modifier
-                                        .size(width = 56.dp, height = 30.dp)
-                                        .clip(RoundedCornerShape(15.dp))
-                                        .background(pillColor),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = tab.icon,
-                                        contentDescription = tab.title,
-                                        tint = iconTint,
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .graphicsLayer {
-                                                scaleX = scale
-                                                scaleY = scale
-                                            }
-                                    )
-                                }
+                                        .size(24.dp)
+                                        .graphicsLayer {
+                                            scaleX = scale
+                                            scaleY = scale
+                                        }
+                                )
                             },
                             label = {
                                 Text(
                                     text = tab.title,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = labelColor,
                                     maxLines = 1
                                 )
                             },
@@ -327,13 +246,24 @@ fun MainScreen(
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = onPrimaryContainer,
                                 selectedTextColor = primary,
-                                indicatorColor = Color.Transparent,
+                                indicatorColor = primaryContainer,
                                 unselectedIconColor = onSurfaceVariant.copy(alpha = 0.70f),
                                 unselectedTextColor = onSurfaceVariant.copy(alpha = 0.65f)
                             )
                         )
                     }
                 }
+            },
+            modifier = modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                TabContent()
             }
         }
     } else {
@@ -345,7 +275,7 @@ fun MainScreen(
                 .navigationBarsPadding()
         ) {
             NavigationRail(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = onSurface,
                 header = {
                     Column(
@@ -356,14 +286,7 @@ fun MainScreen(
                             modifier = Modifier
                                 .size(48.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    Brush.radialGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.primaryContainer
-                                        )
-                                    )
-                                ),
+                                .background(MaterialTheme.colorScheme.primary),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -441,12 +364,10 @@ fun MainScreen(
                 }
             }
 
-            // Main Content Area
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .hazeSource(state = hazeState)
             ) {
                 TabContent()
             }
