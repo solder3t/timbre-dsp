@@ -96,3 +96,24 @@ Java_com_timbre_dsp_DSPEngine_setCrossfeed(JNIEnv* env, jobject /* this */, jlon
     auto* engine = reinterpret_cast<dsp::Engine*>(engineHandle);
     engine->setCrossfeed(enabled, strength);
 }
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_timbre_dsp_DSPEngine_setImpulseResponse(JNIEnv* env, jobject /* this */, jlong engineHandle, jfloatArray leftIR, jfloatArray rightIR, jint length) {
+    if (engineHandle == 0) return;
+    auto* engine = reinterpret_cast<dsp::Engine*>(engineHandle);
+
+    jfloat* cLeft = leftIR != nullptr ? env->GetFloatArrayElements(leftIR, nullptr) : nullptr;
+    jfloat* cRight = rightIR != nullptr ? env->GetFloatArrayElements(rightIR, nullptr) : nullptr;
+
+    engine->setImpulseResponse(cLeft, cRight, length);
+
+    if (cLeft != nullptr) env->ReleaseFloatArrayElements(leftIR, cLeft, 0);
+    if (cRight != nullptr) env->ReleaseFloatArrayElements(rightIR, cRight, 0);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_timbre_dsp_DSPEngine_setConvolutionEnabled(JNIEnv* env, jobject /* this */, jlong engineHandle, jboolean enabled, jfloat wetDryRatio) {
+    if (engineHandle == 0) return;
+    auto* engine = reinterpret_cast<dsp::Engine*>(engineHandle);
+    engine->setConvolutionEnabled(enabled, wetDryRatio);
+}

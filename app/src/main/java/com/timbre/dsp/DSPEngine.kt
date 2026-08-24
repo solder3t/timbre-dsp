@@ -41,12 +41,25 @@ object DSPEngine {
         }
     }
 
+    fun setImpulseResponse(leftIR: FloatArray?, rightIR: FloatArray?, length: Int) {
+        if (engineHandle != 0L && leftIR != null) {
+            setImpulseResponse(engineHandle, leftIR, rightIR ?: leftIR, length)
+        }
+    }
+
+    fun setConvolutionEnabled(enabled: Boolean, wetDry: Float) {
+        if (engineHandle != 0L) {
+            setConvolutionEnabled(engineHandle, enabled, wetDry)
+        }
+    }
+
     fun applySettings(settings: DSPSettings) {
         if (engineHandle == 0L) return
         setPreampGain(engineHandle, settings.preampGain)
         setLimiterEnabled(engineHandle, settings.limiterEnabled)
         setBassBoost(engineHandle, settings.bassBoostEnabled, settings.bassBoostGain, settings.bassBoostCutoffFreq)
         setCrossfeed(engineHandle, settings.crossfeedEnabled, settings.crossfeedStrength)
+        setConvolutionEnabled(engineHandle, settings.convolutionEnabled, settings.convolutionWetDry)
 
         settings.bands.forEachIndexed { index, band ->
             val typeInt = when (band.type) {
@@ -79,4 +92,6 @@ object DSPEngine {
     private external fun setLimiterEnabled(handle: Long, enabled: Boolean)
     private external fun setBassBoost(handle: Long, enabled: Boolean, gainDb: Float, cutoffFreq: Float)
     private external fun setCrossfeed(handle: Long, enabled: Boolean, strength: Float)
+    private external fun setImpulseResponse(handle: Long, leftIR: FloatArray?, rightIR: FloatArray?, length: Int)
+    private external fun setConvolutionEnabled(handle: Long, enabled: Boolean, wetDryRatio: Float)
 }

@@ -1,6 +1,7 @@
 #include "dsp_engine.h"
 #include <cmath>
 #include <algorithm>
+#include <cstring>
 
 #if defined(__ARM_NEON) || defined(__aarch64__)
 #include <arm_neon.h>
@@ -17,7 +18,10 @@ Engine::Engine()
       mLimiterEnabled(true),
       mBassBoostEnabled(false),
       mCrossfeedEnabled(false),
-      mCrossfeedStrength(0.5f) {
+      mCrossfeedStrength(0.5f),
+      mConvolutionEnabled(false),
+      mConvolutionWetDry(0.5f),
+      mConvHistoryIndex(0) {
 
     double frequencies[] = {31.25, 62.5, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0};
     for (int i = 0; i < 10; ++i) {
@@ -112,6 +116,70 @@ void Engine::setCrossfeed(bool enabled, float strength) {
     mCrossfeedStrength = std::max(0.0f, std::min(1.0f, strength));
 }
 
+void Engine::setImpulseResponse(const float* leftIR, const float* rightIR, int length) {
+    std::lock_guard<std::mutex> lock(mLock);
+    // Limit IR length to 4096 samples for low-latency real-time processing
+    int validLen = std::min(length, 4096);
+    if (validLen <= 0 || leftIR == nullptr) {
+        mIrLeft.clear();
+        mIrRight.clear();
+        mConvHistoryLeft.clear();
+        mConvHistoryRight.clear();
+        mConvHistoryIndex = 0;
+        return;
+    }
+
+    mIrLeft.assign(leftIR, leftIR + validLen);
+    if (rightIR != nullptr) {
+        mIrRight.assign(rightIR, rightIR + validLen);
+    } else {
+        mIrRight = mIrLeft; // Mono IR replicated to stereo
+    }
+
+    mConvHistoryLeft.assign(validLen, 0.0f);
+    mConvHistoryRight.assign(validLen, 0.0f);
+    mConvHistoryIndex = 0;
+}
+
+void Engine::setConvolutionEnabled(bool enabled, float wetDryRatio) {
+    std::lock_guard<std::mutex> lock(mLock);
+    mConvolutionEnabled = enabled;
+    mConvolutionWetDry = std::max(0.0f, std::min(1.0f, wetDryRatio));
+}
+
+void Engine::applyConvolution(float* left, float* right, int numSamples) {
+    if (!mConvolutionEnabled || mIrLeft.empty() || mConvHistoryLeft.empty()) {
+        return;
+    }
+
+    int irLen = static_cast<int>(mIrLeft.size());
+    float wet = mConvolutionWetDry;
+    float dry = 1.0f - wet;
+
+    for (int i = 0; i < numSamples; ++i) {
+        mConvHistoryLeft[mConvHistoryIndex] = left[i];
+        mConvHistoryRight[mConvHistoryIndex] = right[i];
+
+        float convL = 0.0f;
+        float convR = 0.0f;
+
+        int histIdx = mConvHistoryIndex;
+        for (int k = 0; k < irLen; ++k) {
+            convL += mConvHistoryLeft[histIdx] * mIrLeft[k];
+            convR += mConvHistoryRight[histIdx] * mIrRight[k];
+
+            if (--histIdx < 0) {
+                histIdx = irLen - 1;
+            }
+        }
+
+        left[i] = (left[i] * dry) + (convL * wet);
+        right[i] = (right[i] * dry) + (convR * wet);
+
+        mConvHistoryIndex = (mConvHistoryIndex + 1) % irLen;
+    }
+}
+
 float Engine::applyLimiter(float sample) {
     if (!mLimiterEnabled) return sample;
     const float threshold = 0.95f;
@@ -127,9 +195,7 @@ void Engine::process(float* buffer, int numSamples) {
     std::lock_guard<std::mutex> lock(mLock);
 
 #if HAS_ARM_NEON
-    // Vectorized pre-amp scaling with NEON
     int vecCount = numSamples / 4;
-    int remainder = numSamples % 4;
     float32x4_t vGain = vdupq_n_f32(mPreampGainLinear);
 
     for (int i = 0; i < vecCount; ++i) {
@@ -146,7 +212,7 @@ void Engine::process(float* buffer, int numSamples) {
     }
 #endif
 
-    // Biquad cascading and peak limiting
+    // Biquad cascading
     for (int i = 0; i < numSamples; ++i) {
         float sample = buffer[i];
 
@@ -158,7 +224,31 @@ void Engine::process(float* buffer, int numSamples) {
             sample = band.process(sample);
         }
 
-        buffer[i] = applyLimiter(sample);
+        buffer[i] = sample;
+    }
+
+    // Convolution (mono in-place)
+    if (mConvolutionEnabled && !mIrLeft.empty()) {
+        int irLen = static_cast<int>(mIrLeft.size());
+        float wet = mConvolutionWetDry;
+        float dry = 1.0f - wet;
+
+        for (int i = 0; i < numSamples; ++i) {
+            mConvHistoryLeft[mConvHistoryIndex] = buffer[i];
+            float convL = 0.0f;
+            int histIdx = mConvHistoryIndex;
+            for (int k = 0; k < irLen; ++k) {
+                convL += mConvHistoryLeft[histIdx] * mIrLeft[k];
+                if (--histIdx < 0) histIdx = irLen - 1;
+            }
+            buffer[i] = (buffer[i] * dry) + (convL * wet);
+            mConvHistoryIndex = (mConvHistoryIndex + 1) % irLen;
+        }
+    }
+
+    // Peak limiter
+    for (int i = 0; i < numSamples; ++i) {
+        buffer[i] = applyLimiter(buffer[i]);
     }
 }
 
@@ -189,8 +279,19 @@ void Engine::processStereo(float* left, float* right, int numSamples) {
             sR = mBandsRight[b].process(sR);
         }
 
-        left[i] = applyLimiter(sL);
-        right[i] = applyLimiter(sR);
+        left[i] = sL;
+        right[i] = sR;
+    }
+
+    // Convolution (Stereo)
+    if (mConvolutionEnabled) {
+        applyConvolution(left, right, numSamples);
+    }
+
+    // Peak Limiter
+    for (int i = 0; i < numSamples; ++i) {
+        left[i] = applyLimiter(left[i]);
+        right[i] = applyLimiter(right[i]);
     }
 }
 

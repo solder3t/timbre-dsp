@@ -1,5 +1,9 @@
 package com.timbre.dsp.ui.effects
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,18 +19,28 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Balance
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Hearing
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Speaker
+import androidx.compose.material.icons.filled.SurroundSound
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,17 +50,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.timbre.dsp.data.ImpulseResponseProfile
 import com.timbre.dsp.model.DSPSettings
 import com.timbre.dsp.model.EQPreset
 import com.timbre.dsp.model.HearingAudiogram
 import com.timbre.dsp.ui.hearing.HearingTestWizard
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EffectsScreen(
     settings: DSPSettings,
+    irProfiles: List<ImpulseResponseProfile>,
     onPreampGainChange: (Float) -> Unit,
+    onAutoPreampChange: (Boolean) -> Unit,
     onChannelBalanceChange: (Float) -> Unit,
     onMonoChange: (Boolean) -> Unit,
     onLimiterChange: (Boolean) -> Unit,
@@ -54,10 +73,26 @@ fun EffectsScreen(
     onCrossfeedChange: (enabled: Boolean, strength: Float) -> Unit,
     onVirtualizerChange: (enabled: Boolean, strength: Float) -> Unit,
     onClarityChange: (enabled: Boolean, gain: Float) -> Unit,
+    onConvolutionChange: (enabled: Boolean, profileId: String, wetDry: Float) -> Unit,
+    onImportCustomIR: (Uri, String) -> Boolean,
     onApplyHearingAudiogram: (HearingAudiogram, EQPreset) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var showHearingWizard by remember { mutableStateOf(false) }
+    var irDropdownExpanded by remember { mutableStateOf(false) }
+
+    val irPickerLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val fileName = uri.lastPathSegment?.substringAfterLast('/') ?: "custom_ir.wav"
+            val success = onImportCustomIR(uri, fileName)
+            if (success) {
+                Toast.makeText(context, "Loaded impulse response: $fileName", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Failed to parse .wav / .irs file", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     if (showHearingWizard) {
         HearingTestWizard(
@@ -126,7 +161,211 @@ fun EffectsScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 2. Channel Balance & Mono Summing Card
+        // 2. Convolution / Impulse Response (.wav / .irs) Card (Option C)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (settings.convolutionEnabled)
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                else
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.SurroundSound, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Convolution / Impulse Response", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "Studio acoustics, tube amps, & .irs models",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = settings.convolutionEnabled,
+                        onCheckedChange = { onConvolutionChange(it, settings.activeConvolutionId, settings.convolutionWetDry) }
+                    )
+                }
+
+                if (settings.convolutionEnabled) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val currentIRName = irProfiles.find { it.id == settings.activeConvolutionId }?.name ?: "Warm Studio Room"
+
+                    Text("Impulse Response Profile:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    ExposedDropdownMenuBox(
+                        expanded = irDropdownExpanded,
+                        onExpandedChange = { irDropdownExpanded = !irDropdownExpanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = currentIRName,
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = irDropdownExpanded) },
+                            modifier = Modifier.menuAnchor(androidx.compose.material3.ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = irDropdownExpanded,
+                            onDismissRequest = { irDropdownExpanded = false }
+                        ) {
+                            irProfiles.forEach { profile ->
+                                DropdownMenuItem(
+                                    text = { Text("${profile.name} (${profile.category})") },
+                                    onClick = {
+                                        onConvolutionChange(true, profile.id, settings.convolutionWetDry)
+                                        irDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Wet / Dry Ratio", style = MaterialTheme.typography.bodySmall)
+                        Text("${(settings.convolutionWetDry * 100).toInt()}% Wet", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Slider(
+                        value = settings.convolutionWetDry,
+                        onValueChange = { onConvolutionChange(true, settings.activeConvolutionId, it) },
+                        valueRange = 0f..1f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            irPickerLauncher.launch(arrayOf("audio/x-wav", "audio/wav", "application/octet-stream", "*/*"))
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.FileUpload, contentDescription = null)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Import Custom .wav / .irs File")
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 3. Preamp Gain & Auto-Preamp Headroom Protection (Option A)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Pre-Amp Gain", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                if (settings.autoPreampEnabled) "Auto-Trim Protection Active" else "Master input attenuation / boost",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Text(
+                        text = String.format(Locale.US, "%.1f dB", settings.preampGain),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                if (!settings.autoPreampEnabled) {
+                    Slider(
+                        value = settings.preampGain,
+                        onValueChange = onPreampGainChange,
+                        valueRange = -15f..15f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Auto-Preamp Headroom Switch
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Shield, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Auto-Preamp (Headroom Guard)", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "Prevents digital clipping when boosting EQ",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = settings.autoPreampEnabled,
+                        onCheckedChange = onAutoPreampChange
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Anti-Clipping Peak Limiter Switch
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("Anti-Clipping Peak Limiter", style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                "Prevents digital distortion & speaker damage",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = settings.limiterEnabled,
+                        onCheckedChange = onLimiterChange
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 4. Channel Balance & Mono Summing Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -191,76 +430,7 @@ fun EffectsScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 3. Preamp Gain & Limiter Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text("Pre-Amp Gain", style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                "Master input attenuation / boost",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    Text(
-                        text = String.format(Locale.US, "%.1f dB", settings.preampGain),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                Slider(
-                    value = settings.preampGain,
-                    onValueChange = onPreampGainChange,
-                    valueRange = -15f..15f,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text("Anti-Clipping Peak Limiter", style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                "Prevents digital distortion & speaker damage",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    Switch(
-                        checked = settings.limiterEnabled,
-                        onCheckedChange = onLimiterChange
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 4. Bass Boost Card
+        // 5. Bass Boost Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -327,7 +497,7 @@ fun EffectsScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 5. Binaural Crossfeed & Spatializer
+        // 6. Binaural Crossfeed & Spatializer
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -410,7 +580,7 @@ fun EffectsScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 6. Treble Clarity & Harmonic Exciter
+        // 7. Treble Clarity & Harmonic Exciter
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),

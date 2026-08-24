@@ -1,7 +1,9 @@
 package com.timbre.dsp.data
 
+import android.content.Context
 import com.timbre.dsp.model.DSPSettings
 import com.timbre.dsp.model.EQBand
+import com.timbre.dsp.model.EQMode
 import com.timbre.dsp.model.EQPreset
 import com.timbre.dsp.model.FilterType
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +53,9 @@ object PresetRepository {
     )
 
     private val customPresets = mutableListOf<EQPreset>()
+    val customPresetsList: List<EQPreset>
+        get() = customPresets.toList()
+
     private val _presets = MutableStateFlow<List<EQPreset>>(builtInPresets)
     val presets: StateFlow<List<EQPreset>> = _presets.asStateFlow()
 
@@ -58,19 +63,22 @@ object PresetRepository {
         return _presets.value.find { it.id == id }
     }
 
+    fun refreshPresets(context: Context? = null) {
+        _presets.value = builtInPresets + customPresets
+    }
+
     fun saveCustomPreset(name: String, settings: DSPSettings): EQPreset {
         val newPreset = EQPreset(
             id = "custom_${System.currentTimeMillis()}",
             name = name,
+            eqMode = settings.eqMode,
             isCustom = true,
             preampGain = settings.preampGain,
             bands = settings.bands.map { it.copy() },
             bassBoostGain = settings.bassBoostGain,
-            bassBoostFreq = settings.bassBoostCutoffFreq,
-            virtualizerStrength = settings.virtualizerStrength,
             clarityGain = settings.clarityGain,
-            crossfeedStrength = settings.crossfeedStrength,
-            limiterEnabled = settings.limiterEnabled
+            virtualizerStrength = settings.virtualizerStrength,
+            crossfeedStrength = settings.crossfeedStrength
         )
         customPresets.add(newPreset)
         _presets.value = builtInPresets + customPresets

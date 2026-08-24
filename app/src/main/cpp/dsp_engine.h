@@ -26,6 +26,10 @@ public:
     void setBassBoost(bool enabled, float gainDb, float cutoffFreq);
     void setCrossfeed(bool enabled, float strength);
 
+    // Convolution engine (.wav / .irs Impulse Response)
+    void setImpulseResponse(const float* leftIR, const float* rightIR, int length);
+    void setConvolutionEnabled(bool enabled, float wetDryRatio);
+
 private:
     float mPreampGainLinear;
     float mSampleRate;
@@ -33,6 +37,15 @@ private:
     bool mBassBoostEnabled;
     bool mCrossfeedEnabled;
     float mCrossfeedStrength;
+
+    // Convolution state
+    bool mConvolutionEnabled;
+    float mConvolutionWetDry;
+    std::vector<float> mIrLeft;
+    std::vector<float> mIrRight;
+    std::vector<float> mConvHistoryLeft;
+    std::vector<float> mConvHistoryRight;
+    int mConvHistoryIndex;
 
     std::vector<Biquad> mBandsLeft;
     std::vector<Biquad> mBandsRight;
@@ -46,6 +59,7 @@ private:
     std::mutex mLock;
 
     float applyLimiter(float sample);
+    void applyConvolution(float* left, float* right, int numSamples);
 };
 
 } // namespace dsp

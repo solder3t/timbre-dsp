@@ -278,12 +278,15 @@ fun SessionsScreen(
                 }
             }
         } else {
-            items(activeSessions) { session ->
+            val groupedSessions = activeSessions.groupBy { it.packageName }.values.toList()
+            items(groupedSessions) { sessionsForApp ->
+                val primarySession = sessionsForApp.first()
                 SessionItemCard(
-                    session = session,
+                    session = primarySession,
+                    sessionCount = sessionsForApp.size,
                     presets = presets,
                     onBindPreset = { presetId ->
-                        onBindAppPreset(session.packageName, session.appName, presetId)
+                        onBindAppPreset(primarySession.packageName, primarySession.appName, presetId)
                     }
                 )
             }
@@ -423,6 +426,7 @@ private fun ConfiguredAppProfileCard(
 @Composable
 private fun SessionItemCard(
     session: AudioSessionInfo,
+    sessionCount: Int = 1,
     presets: List<EQPreset>,
     onBindPreset: (String) -> Unit
 ) {
@@ -448,8 +452,9 @@ private fun SessionItemCard(
                         text = session.appName,
                         style = MaterialTheme.typography.titleMedium
                     )
+                    val streamText = if (sessionCount > 1) "$sessionCount active audio streams" else "Session #${session.sessionId}"
                     Text(
-                        text = "${session.packageName} • Session #${session.sessionId}",
+                        text = "${session.packageName} • $streamText",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

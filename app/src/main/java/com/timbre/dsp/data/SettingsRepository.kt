@@ -8,6 +8,7 @@ import com.timbre.dsp.model.EQBand
 import com.timbre.dsp.model.EQMode
 import com.timbre.dsp.model.FilterType
 import com.timbre.dsp.model.RoutingMode
+import com.timbre.dsp.model.TargetCurve
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -28,6 +29,8 @@ object SettingsRepository {
             val eqMode = try { EQMode.valueOf(obj.optString("eqMode", "GRAPHIC_10")) } catch (e: Exception) { EQMode.GRAPHIC_10 }
             val currentPresetId = obj.optString("currentPresetId", "flat")
             val preampGain = obj.optDouble("preampGain", 0.0).toFloat()
+            val autoPreampEnabled = obj.optBoolean("autoPreampEnabled", false)
+            val targetCurve = try { TargetCurve.valueOf(obj.optString("targetCurve", "NONE")) } catch (e: Exception) { TargetCurve.NONE }
 
             val bands = mutableListOf<EQBand>()
             val bandsArray = obj.optJSONArray("bands")
@@ -40,7 +43,8 @@ object SettingsRepository {
                             frequency = bObj.optDouble("frequency", 1000.0).toFloat(),
                             gain = bObj.optDouble("gain", 0.0).toFloat(),
                             q = bObj.optDouble("q", 1.414).toFloat(),
-                            type = try { FilterType.valueOf(bObj.optString("type", "PEAK")) } catch (e: Exception) { FilterType.PEAK }
+                            type = try { FilterType.valueOf(bObj.optString("type", "PEAK")) } catch (e: Exception) { FilterType.PEAK },
+                            enabled = bObj.optBoolean("enabled", true)
                         )
                     )
                 }
@@ -61,6 +65,10 @@ object SettingsRepository {
             val clarityEnabled = obj.optBoolean("clarityEnabled", false)
             val clarityGain = obj.optDouble("clarityGain", 0.0).toFloat()
 
+            val convolutionEnabled = obj.optBoolean("convolutionEnabled", false)
+            val convolutionWetDry = obj.optDouble("convolutionWetDry", 0.5).toFloat()
+            val activeConvolutionId = obj.optString("activeConvolutionId", "studio_room")
+
             val limiterEnabled = obj.optBoolean("limiterEnabled", true)
             val channelBalance = obj.optDouble("channelBalance", 0.0).toFloat()
             val isMono = obj.optBoolean("isMono", false)
@@ -72,6 +80,8 @@ object SettingsRepository {
                 eqMode = eqMode,
                 currentPresetId = currentPresetId,
                 preampGain = preampGain,
+                autoPreampEnabled = autoPreampEnabled,
+                targetCurve = targetCurve,
                 bands = bands,
                 bassBoostEnabled = bassBoostEnabled,
                 bassBoostGain = bassBoostGain,
@@ -82,6 +92,9 @@ object SettingsRepository {
                 crossfeedStrength = crossfeedStrength,
                 clarityEnabled = clarityEnabled,
                 clarityGain = clarityGain,
+                convolutionEnabled = convolutionEnabled,
+                convolutionWetDry = convolutionWetDry,
+                activeConvolutionId = activeConvolutionId,
                 limiterEnabled = limiterEnabled,
                 channelBalance = channelBalance,
                 isMono = isMono,
@@ -102,6 +115,8 @@ object SettingsRepository {
                 put("eqMode", settings.eqMode.name)
                 put("currentPresetId", settings.currentPresetId)
                 put("preampGain", settings.preampGain.toDouble())
+                put("autoPreampEnabled", settings.autoPreampEnabled)
+                put("targetCurve", settings.targetCurve.name)
 
                 val bandsArray = JSONArray()
                 for (band in settings.bands) {
@@ -111,6 +126,7 @@ object SettingsRepository {
                         put("gain", band.gain.toDouble())
                         put("q", band.q.toDouble())
                         put("type", band.type.name)
+                        put("enabled", band.enabled)
                     }
                     bandsArray.put(bObj)
                 }
@@ -128,6 +144,10 @@ object SettingsRepository {
 
                 put("clarityEnabled", settings.clarityEnabled)
                 put("clarityGain", settings.clarityGain.toDouble())
+
+                put("convolutionEnabled", settings.convolutionEnabled)
+                put("convolutionWetDry", settings.convolutionWetDry.toDouble())
+                put("activeConvolutionId", settings.activeConvolutionId)
 
                 put("limiterEnabled", settings.limiterEnabled)
                 put("channelBalance", settings.channelBalance.toDouble())

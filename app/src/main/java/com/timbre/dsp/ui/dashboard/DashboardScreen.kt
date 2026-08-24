@@ -3,6 +3,7 @@ package com.timbre.dsp.ui.dashboard
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -64,6 +65,7 @@ import com.timbre.dsp.model.EQBand
 import com.timbre.dsp.model.EQMode
 import com.timbre.dsp.model.EQPreset
 import com.timbre.dsp.model.PermissionStatus
+import com.timbre.dsp.model.TargetCurve
 import com.timbre.dsp.ui.components.AutoEqDialog
 import com.timbre.dsp.ui.components.EQCurveVisualizer
 import com.timbre.dsp.ui.components.ImportExportDialog
@@ -93,6 +95,7 @@ fun DashboardScreen(
     onApplyImportedPreset: (EQPreset) -> Unit,
     onSaveCustomPreset: (String) -> Unit,
     onBindCurrentDevice: () -> Unit,
+    onSetTargetCurve: (TargetCurve) -> Unit,
     onNavigateToSetup: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -102,23 +105,11 @@ fun DashboardScreen(
     var showImportExportDialog by remember { mutableStateOf(false) }
     var editingParametricBand by remember { mutableStateOf<EQBand?>(null) }
 
-    val bandLabels = listOf("31 Hz", "62 Hz", "125 Hz", "250 Hz", "500 Hz", "1 kHz", "2 kHz", "4 kHz", "8 kHz", "16 kHz")
-
-    val currentPreset = remember(settings.currentPresetId, presets, settings.bands) {
-        presets.find { it.id == settings.currentPresetId } ?: EQPreset(
-            id = "custom",
-            name = "Custom",
-            isCustom = true,
-            bands = settings.bands,
-            preampGain = settings.preampGain
-        )
-    }
-
     if (showAutoEqDialog) {
         AutoEqDialog(
             onDismiss = { showAutoEqDialog = false },
-            onSelectProfile = {
-                onApplyAutoEq(it)
+            onSelectProfile = { profile ->
+                onApplyAutoEq(profile)
                 showAutoEqDialog = false
             }
         )
@@ -127,19 +118,26 @@ fun DashboardScreen(
     if (showSavePresetDialog) {
         SavePresetDialog(
             onDismiss = { showSavePresetDialog = false },
-            onSave = {
-                onSaveCustomPreset(it)
+            onSave = { name ->
+                onSaveCustomPreset(name)
                 showSavePresetDialog = false
             }
         )
     }
 
     if (showImportExportDialog) {
+        val currentPreset = presets.find { it.id == settings.currentPresetId } ?: EQPreset(
+            id = settings.currentPresetId,
+            name = "Active Preset",
+            eqMode = settings.eqMode,
+            bands = settings.bands,
+            preampGain = settings.preampGain
+        )
         ImportExportDialog(
             currentPreset = currentPreset,
             onDismiss = { showImportExportDialog = false },
-            onImportPreset = {
-                onApplyImportedPreset(it)
+            onImportPreset = { preset ->
+                onApplyImportedPreset(preset)
                 showImportExportDialog = false
             }
         )
@@ -150,51 +148,72 @@ fun DashboardScreen(
             band = editingParametricBand!!,
             canDelete = settings.bands.size > 1,
             onDismiss = { editingParametricBand = null },
-            onSaveBand = { onUpdateParametricBand(it) },
-            onDeleteBand = { onDeleteParametricBand(editingParametricBand!!.index) }
+            onSaveBand = { updatedBand ->
+                onUpdateParametricBand(updatedBand)
+                editingParametricBand = null
+            },
+            onDeleteBand = {
+                onDeleteParametricBand(editingParametricBand!!.index)
+                editingParametricBand = null
+            }
         )
     }
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // 1. Header & Master Power Toggle
+        // 1. Master Switch Card
         item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (settings.isEnabled)
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
             ) {
-                Column {
-                    Text(
-                        text = "Timbre DSP",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-                    Text(
-                        text = if (settings.isEnabled) "DSP Engine Active" else "DSP Bypassed",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (settings.isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.PowerSettingsNew,
+                            contentDescription = null,
+                            tint = if (settings.isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = if (settings.isEnabled) "Timbre DSP Engine Active" else "Timbre DSP Engine Bypassed",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            val presetName = presets.find { it.id == settings.currentPresetId }?.name ?: settings.currentPresetId.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
+                            Text(
+                                text = "Preset: $presetName • ${String.format(Locale.ROOT, "%.1f", settings.preampGain)} dB Preamp",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = settings.isEnabled,
+                        onCheckedChange = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onToggleMaster(it)
+                        }
                     )
                 }
-                Switch(
-                    checked = settings.isEnabled,
-                    onCheckedChange = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onToggleMaster(it)
-                    },
-                    thumbContent = {
-                        Icon(
-                            Icons.Default.PowerSettingsNew,
-                            contentDescription = null,
-                            modifier = Modifier.padding(2.dp)
-                        )
-                    }
-                )
             }
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
         }
 
         // 2. Active Device Banner
@@ -248,25 +267,28 @@ fun DashboardScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = if (isOperational)
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                     else
-                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
                 )
             ) {
                 Row(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = if (isOperational) Icons.Default.CheckCircle else Icons.Default.Warning,
                         contentDescription = null,
-                        tint = if (isOperational) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        tint = if (isOperational) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(end = 12.dp)
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column {
                         Text(
-                            text = if (isOperational) routingStatus.statusDescription else "Setup Permissions Needed",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                            text = "Routing: ${routingStatus.effectiveMode.name} Mode",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
                         )
                         Text(
                             text = if (isOperational) "Tap to manage Shizuku / Root routing" else "Tap to configure Shizuku, Root, or Notification access",
@@ -300,12 +322,14 @@ fun DashboardScreen(
             EQCurveVisualizer(
                 bands = settings.bands,
                 preampGain = settings.preampGain,
+                targetCurve = settings.targetCurve,
                 fftMagnitudes = if (settings.isEnabled) fftMagnitudes else null,
                 peakLevels = if (settings.isEnabled) peakLevels else null,
                 onBandGainChange = { idx, gain ->
                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                     onBandGainChange(idx, gain)
                 },
+                onTargetCurveChange = onSetTargetCurve,
                 isInteractive = settings.isEnabled
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -320,115 +344,81 @@ fun DashboardScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // AutoEq Button
                 AssistChip(
                     onClick = { showAutoEqDialog = true },
-                    label = { Text("AutoEq (4000+)") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Headphones, contentDescription = null)
-                    },
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-                    )
+                    label = { Text("AutoEq Profiles") },
+                    leadingIcon = { Icon(Icons.Default.Headphones, contentDescription = null) },
+                    colors = AssistChipDefaults.assistChipColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
                 )
 
-                // Peace EQ Import/Export Button
-                AssistChip(
-                    onClick = { showImportExportDialog = true },
-                    label = { Text("Peace EQ / Text") },
-                    leadingIcon = {
-                        Icon(Icons.Default.ImportExport, contentDescription = null)
-                    }
-                )
-
-                // Save Preset Button
                 AssistChip(
                     onClick = { showSavePresetDialog = true },
                     label = { Text("Save Preset") },
-                    leadingIcon = {
-                        Icon(Icons.Default.BookmarkAdd, contentDescription = null)
-                    }
+                    leadingIcon = { Icon(Icons.Default.BookmarkAdd, contentDescription = null) }
                 )
 
-                // Reset Flat Button
-                IconButton(onClick = onResetBands) {
-                    Icon(Icons.Default.RestartAlt, contentDescription = "Reset to Flat")
-                }
+                AssistChip(
+                    onClick = { showImportExportDialog = true },
+                    label = { Text("Peace / APO Import") },
+                    leadingIcon = { Icon(Icons.Default.ImportExport, contentDescription = null) }
+                )
 
-                // Preset Chips
-                for (preset in presets) {
-                    val isSelected = settings.currentPresetId == preset.id
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { onSelectPreset(preset) },
-                        label = { Text(preset.name) }
-                    )
-                }
+                AssistChip(
+                    onClick = onResetBands,
+                    label = { Text("Reset Flat") },
+                    leadingIcon = { Icon(Icons.Default.RestartAlt, contentDescription = null) }
+                )
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
         }
 
-        // 6. EQ Mode Selector Tab
+        // 6. EQ Mode Tab Bar
         item {
+            val tabs = listOf("10-Band Graphic", "Parametric EQ")
+            val selectedIndex = if (settings.eqMode == EQMode.PARAMETRIC) 1 else 0
+
             PrimaryTabRow(
-                selectedTabIndex = if (settings.eqMode == EQMode.GRAPHIC_10) 0 else 1,
+                selectedTabIndex = selectedIndex,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Tab(
-                    selected = settings.eqMode == EQMode.GRAPHIC_10,
-                    onClick = { onSetEQMode(EQMode.GRAPHIC_10) },
-                    text = { Text("Graphic EQ") }
-                )
-                Tab(
-                    selected = settings.eqMode == EQMode.PARAMETRIC,
-                    onClick = { onSetEQMode(EQMode.PARAMETRIC) },
-                    text = { Text("Parametric EQ") }
-                )
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedIndex == index,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                            if (index == 0) onSetEQMode(EQMode.GRAPHIC_10)
+                            else onSetEQMode(EQMode.PARAMETRIC)
+                        },
+                        text = { Text(title) }
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // 7. Band Controls depending on Mode
-        if (settings.eqMode == EQMode.GRAPHIC_10) {
-            // Graphic EQ Sliders
-            items(settings.bands.size) { index ->
-                val band = settings.bands[index]
-                val label = bandLabels.getOrElse(index) { "${band.frequency.toInt()} Hz" }
-
+        // 7. Equalizer Controls (Graphic Sliders vs Parametric Band List)
+        if (settings.eqMode != EQMode.PARAMETRIC) {
+            // Graphic 10-Band EQ Sliders
+            item {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 2.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = label,
-                        modifier = Modifier.width(68.dp),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-                    )
-
-                    Slider(
-                        value = band.gain,
-                        onValueChange = {
-                            if (it == 0f) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            onBandGainChange(index, (it * 2).toInt() / 2f)
-                        },
-                        valueRange = -15f..15f,
-                        enabled = settings.isEnabled,
-                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
-                    )
-
-                    Text(
-                        text = String.format(Locale.US, "%+.1f dB", band.gain),
-                        modifier = Modifier.width(64.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.End,
-                        color = if (band.gain > 0) MaterialTheme.colorScheme.primary else if (band.gain < 0) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    settings.bands.forEach { band ->
+                        BandSliderColumn(
+                            band = band,
+                            isEnabled = settings.isEnabled,
+                            onGainChange = { newGain ->
+                                onBandGainChange(band.index, newGain)
+                            }
+                        )
+                    }
                 }
             }
         } else {
-            // Parametric EQ Bands List
+            // Parametric EQ Band Cards
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -436,7 +426,7 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Configured Parametric Filters (${settings.bands.size})",
+                        text = "Parametric Filters (${settings.bands.size})",
                         style = MaterialTheme.typography.titleMedium
                     )
                     OutlinedButton(
@@ -452,53 +442,162 @@ fun DashboardScreen(
             }
 
             items(settings.bands) { band ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .clickable { editingParametricBand = band },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer
-                            ) {
-                                Text(
-                                    text = "B${band.index + 1}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = "${band.frequency.toInt()} Hz • ${band.type.name.replace("_", " ")}",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
-                                )
-                                Text(
-                                    text = String.format(Locale.US, "Gain: %+.1f dB • Q: %.2f", band.gain, band.q),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        Icon(Icons.Default.Tune, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
+                ParametricBandCard(
+                    band = band,
+                    isEnabled = settings.isEnabled,
+                    onClick = { editingParametricBand = band }
+                )
             }
         }
 
+        // 8. Preset Quick Chips Bar
         item {
+            Spacer(modifier = Modifier.height(14.dp))
+            Text(
+                text = "Preset Library",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                presets.forEach { preset ->
+                    val isSelected = settings.currentPresetId == preset.id
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                            onSelectPreset(preset)
+                        },
+                        label = { Text(preset.name) },
+                        leadingIcon = if (isSelected) {
+                            { Icon(Icons.Default.CheckCircle, contentDescription = null) }
+                        } else null
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+@Composable
+private fun BandSliderColumn(
+    band: EQBand,
+    isEnabled: Boolean,
+    onGainChange: (Float) -> Unit
+) {
+    val haptic = LocalHapticFeedback.current
+    val freqLabel = formatFrequency(band.frequency)
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(58.dp)
+            .padding(vertical = 4.dp)
+    ) {
+        Text(
+            text = "${if (band.gain > 0) "+" else ""}${String.format(Locale.ROOT, "%.1f", band.gain)}",
+            style = MaterialTheme.typography.labelSmall,
+            color = if (band.gain != 0f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = if (band.gain != 0f) FontWeight.Bold else FontWeight.Normal
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Box(
+            modifier = Modifier.height(160.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Slider(
+                value = band.gain,
+                onValueChange = {
+                    onGainChange((it * 2).toInt() / 2f)
+                },
+                valueRange = -15f..15f,
+                enabled = isEnabled,
+                modifier = Modifier
+                    .height(160.dp)
+                    .width(42.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = freqLabel,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun ParametricBandCard(
+    band: EQBand,
+    isEnabled: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = isEnabled, onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.padding(end = 12.dp)
+                ) {
+                    Text(
+                        text = "#${band.index + 1}",
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Column {
+                    Text(
+                        text = "${formatFrequency(band.frequency)} • ${band.type.name.replace("_", " ")}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "Q: ${String.format(Locale.ROOT, "%.2f", band.q)} • Gain: ${if (band.gain > 0) "+" else ""}${String.format(Locale.ROOT, "%.1f", band.gain)} dB",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            IconButton(onClick = onClick) {
+                Icon(Icons.Default.Tune, contentDescription = "Edit Band")
+            }
+        }
+    }
+}
+
+private fun formatFrequency(freq: Float): String {
+    return if (freq >= 1000f) {
+        val kHz = freq / 1000f
+        if (kHz % 1.0f == 0f) "${kHz.toInt()}k" else "${String.format(Locale.ROOT, "%.1f", kHz)}k"
+    } else {
+        "${freq.toInt()}Hz"
     }
 }

@@ -3,7 +3,10 @@ package com.timbre.dsp.ui.setup
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,9 +20,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.Notifications
@@ -27,9 +33,11 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,16 +61,36 @@ import com.timbre.dsp.ui.magisk.MagiskInstallerDialog
 @Composable
 fun PermissionSetupSheet(
     permissionStatus: PermissionStatus,
+    isSleepTimerRunning: Boolean,
+    sleepTimerSeconds: Int,
     onRequestShizuku: () -> Unit,
     onGrantDumpShizuku: () -> Unit,
     onGrantDumpRoot: () -> Unit,
     onOpenNotificationSettings: () -> Unit,
     onRequestBatteryOptimization: () -> Unit,
+    onStartSleepTimer: (Int) -> Unit,
+    onCancelSleepTimer: () -> Unit,
+    onExportBackup: (Uri) -> Boolean,
+    onImportBackup: (Uri) -> Boolean,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var showMagiskDialog by remember { mutableStateOf(false) }
+
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) {
+            val ok = onExportBackup(uri)
+            Toast.makeText(context, if (ok) "Configuration backup exported!" else "Export failed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val ok = onImportBackup(uri)
+            Toast.makeText(context, if (ok) "Configuration restored successfully!" else "Invalid backup file", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     if (showMagiskDialog) {
         MagiskInstallerDialog(
@@ -84,11 +112,11 @@ fun PermissionSetupSheet(
         ) {
             Column {
                 Text(
-                    text = "System Permissions & Setup",
+                    text = "System Permissions & Tools",
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    text = "Configure routing permissions for system-wide DSP",
+                    text = "Configure routing permissions, sleep timer, and backups",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -100,7 +128,115 @@ fun PermissionSetupSheet(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 1. Shizuku Integration Card
+        // 1. DSP Sleep Timer Card (Option B)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isSleepTimerRunning)
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                else
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Bedtime, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text("DSP Sleep Timer", style = MaterialTheme.typography.titleMedium)
+                            val minutes = sleepTimerSeconds / 60
+                            val seconds = sleepTimerSeconds % 60
+                            Text(
+                                text = if (isSleepTimerRunning) "Auto-bypass in ${minutes}m ${seconds}s" else "Automatically pause DSP for bedtime listening",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    listOf(15, 30, 45, 60).forEach { mins ->
+                        FilterChip(
+                            selected = isSleepTimerRunning && (sleepTimerSeconds in ((mins - 1) * 60)..(mins * 60)),
+                            onClick = { onStartSleepTimer(mins) },
+                            label = { Text("${mins}m") }
+                        )
+                    }
+                    if (isSleepTimerRunning) {
+                        OutlinedButton(onClick = onCancelSleepTimer) {
+                            Text("Cancel")
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 2. Full Suite Backup & Restore Card (Option B)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Backup, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text("Backup & Restore Suite", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Export/import all custom presets, device profiles, & app rules",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { exportLauncher.launch("timbre_backup.json") },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Upload, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Export Backup")
+                    }
+
+                    OutlinedButton(
+                        onClick = { importLauncher.launch(arrayOf("application/json", "*/*")) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Restore")
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 3. Shizuku Integration Card
         SetupItemCard(
             title = "Shizuku Integration",
             subtitle = if (permissionStatus.hasShizukuPermission) "Shizuku binder connected & permission granted"
@@ -130,7 +266,7 @@ fun PermissionSetupSheet(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 2. Root Access Card
+        // 4. Root Access Card
         SetupItemCard(
             title = "Root Access & Magisk Engine",
             subtitle = if (permissionStatus.hasRootPermission) "Root access granted (SU active)"
@@ -159,7 +295,7 @@ fun PermissionSetupSheet(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 3. Notification Access Card
+        // 5. Notification Access Card
         SetupItemCard(
             title = "Notification / Media Access",
             subtitle = if (permissionStatus.hasNotificationAccess) "Media session tracking active"
@@ -178,7 +314,7 @@ fun PermissionSetupSheet(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 4. Battery Optimization Card
+        // 6. Battery Optimization Card
         SetupItemCard(
             title = "Background Battery Optimization",
             subtitle = if (permissionStatus.isBatteryOptimizationIgnored) "Unrestricted background DSP execution"
@@ -197,7 +333,7 @@ fun PermissionSetupSheet(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 5. Manual ADB Fallback Card
+        // 7. Manual ADB Fallback Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -252,7 +388,7 @@ fun PermissionSetupSheet(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 6. OEM / Samsung Audio Diagnostics Card
+        // 8. OEM / Samsung Audio Diagnostics Card
         val isSamsung = android.os.Build.MANUFACTURER.contains("samsung", ignoreCase = true)
         Card(
             modifier = Modifier.fillMaxWidth(),

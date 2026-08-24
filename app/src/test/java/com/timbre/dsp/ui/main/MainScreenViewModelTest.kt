@@ -1,5 +1,6 @@
 package com.timbre.dsp.ui.main
 
+import com.timbre.dsp.audio.WavReader
 import com.timbre.dsp.data.AutoEqRepository
 import com.timbre.dsp.data.EqualizerApoParser
 import com.timbre.dsp.data.PresetRepository
@@ -8,10 +9,14 @@ import com.timbre.dsp.model.EQBand
 import com.timbre.dsp.model.EQMode
 import com.timbre.dsp.model.EQPreset
 import com.timbre.dsp.model.FilterType
+import com.timbre.dsp.model.TargetCurve
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 class DSPRepositoryTest {
 
@@ -100,5 +105,54 @@ class DSPRepositoryTest {
     assertTrue(exported.contains("Preamp: -2.0 dB"))
     assertTrue(exported.contains("Filter 1: ON PK Fc 100.0 Hz Gain 3.0 dB Q 1.41"))
     assertTrue(exported.contains("Filter 2: ON HSC Fc 10000.0 Hz Gain -1.5 dB Q 0.71"))
+  }
+
+  @Test
+  fun testTargetCurveValues() {
+    val curves = TargetCurve.values()
+    assertTrue(curves.contains(TargetCurve.HARMAN_OVER_EAR))
+    assertTrue(curves.contains(TargetCurve.HARMAN_IN_EAR))
+    assertTrue(curves.contains(TargetCurve.IEF_NEUTRAL))
+    assertTrue(curves.contains(TargetCurve.DIFFUSE_FIELD))
+  }
+
+  @Test
+  fun testWavReaderParsing16BitPcm() {
+    // Generate valid RIFF WAVE buffer
+    val numSamples = 64
+    val dataBytes = numSamples * 2 * 2 // 2 channels, 16-bit (2 bytes)
+    val totalSize = 36 + dataBytes
+
+    val buffer = ByteBuffer.allocate(44 + dataBytes).order(ByteOrder.LITTLE_ENDIAN)
+    buffer.put("RIFF".toByteArray())
+    buffer.putInt(totalSize)
+    buffer.put("WAVE".toByteArray())
+    buffer.put("fmt ".toByteArray())
+    buffer.putInt(16) // chunk size
+    buffer.putShort(1) // PCM format
+    buffer.putShort(2) // 2 channels
+    buffer.putInt(48000) // sample rate
+    buffer.putInt(48000 * 4) // byte rate
+    buffer.putShort(4) // block align
+    buffer.putShort(16) // bits per sample
+    buffer.put("data".toByteArray())
+    buffer.putInt(dataBytes)
+
+    // Write samples (sine / impulse)
+    for (i in 0 until numSamples) {
+      val sample = if (i == 0) 16000.toShort() else 0.toShort()
+      buffer.putShort(sample) // Left
+      buffer.putShort(sample) // Right
+    }
+
+    val inputStream = ByteArrayInputStream(buffer.array())
+    val parsed = WavReader.parseWav(inputStream)
+
+    assertNotNull(parsed)
+    assertEquals(48000, parsed!!.sampleRate)
+    assertEquals(2, parsed.numChannels)
+    assertEquals(numSamples, parsed.leftChannel.size)
+    assertEquals(numSamples, parsed.rightChannel.size)
+    assertTrue(parsed.leftChannel[0] > 0.5f) // Normalized peak near 0.89
   }
 }

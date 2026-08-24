@@ -1,24 +1,51 @@
 package com.timbre.dsp.model
 
-enum class FilterType {
-    PEAK,
-    LOW_SHELF,
-    HIGH_SHELF,
-    LOW_PASS,
-    HIGH_PASS,
-    NOTCH,
-    BAND_PASS
+enum class RoutingMode {
+    AUTO,
+    STANDALONE,
+    BROADCAST,
+    SHIZUKU,
+    ROOT
 }
 
 enum class EQMode {
     GRAPHIC_10,
+    GRAPHIC_15,
+    GRAPHIC_31,
     PARAMETRIC
+}
+
+enum class FilterType {
+    LOW_PASS,
+    HIGH_PASS,
+    BAND_PASS,
+    NOTCH,
+    PEAK,
+    LOW_SHELF,
+    HIGH_SHELF
+}
+
+enum class OutputDeviceType {
+    SPEAKER,
+    WIRED,
+    BLUETOOTH,
+    USB,
+    OTHER
+}
+
+enum class TargetCurve(val displayName: String) {
+    NONE("None"),
+    HARMAN_OVER_EAR("Harman Over-Ear (2019)"),
+    HARMAN_IN_EAR("Harman In-Ear (2019)"),
+    IEF_NEUTRAL("IEF Neutral Target"),
+    DIFFUSE_FIELD("Diffuse Field"),
+    FREE_FIELD("Free Field")
 }
 
 data class EQBand(
     val index: Int,
     val frequency: Float,
-    val gain: Float = 0f, // in dB (-15dB to +15dB, or -24 to +24 in parametric)
+    val gain: Float = 0f,
     val q: Float = 1.414f,
     val type: FilterType = FilterType.PEAK,
     val enabled: Boolean = true
@@ -27,16 +54,14 @@ data class EQBand(
 data class EQPreset(
     val id: String,
     val name: String,
-    val isCustom: Boolean = false,
     val eqMode: EQMode = EQMode.GRAPHIC_10,
-    val preampGain: Float = 0f,
     val bands: List<EQBand>,
+    val preampGain: Float = 0f,
     val bassBoostGain: Float = 0f,
-    val bassBoostFreq: Float = 80f,
-    val virtualizerStrength: Float = 0f,
     val clarityGain: Float = 0f,
+    val virtualizerStrength: Float = 0f,
     val crossfeedStrength: Float = 0f,
-    val limiterEnabled: Boolean = true
+    val isCustom: Boolean = false
 )
 
 data class AutoEqProfile(
@@ -44,32 +69,15 @@ data class AutoEqProfile(
     val brand: String,
     val source: String,
     val bands: List<EQBand>,
-    val preampGain: Float = 0f
+    val preampGain: Float = -4.5f
 )
 
 data class AudioSessionInfo(
     val sessionId: Int,
     val packageName: String,
-    val appName: String,
-    val isPlaying: Boolean = true,
-    val attachedTime: Long = System.currentTimeMillis()
+    val appName: String = "Active Player",
+    val isPlaying: Boolean = true
 )
-
-enum class RoutingMode {
-    AUTO,
-    SHIZUKU,
-    ROOT,
-    BROADCAST,
-    STANDALONE
-}
-
-enum class OutputDeviceType {
-    BLUETOOTH,
-    USB,
-    WIRED,
-    SPEAKER,
-    OTHER
-}
 
 data class DeviceProfile(
     val deviceId: String,
@@ -113,7 +121,9 @@ data class DSPSettings(
     val eqMode: EQMode = EQMode.GRAPHIC_10,
     val currentPresetId: String = "flat",
     val preampGain: Float = 0f,
+    val autoPreampEnabled: Boolean = false,
     val bands: List<EQBand> = default10Bands(),
+    val targetCurve: TargetCurve = TargetCurve.NONE,
     val bassBoostEnabled: Boolean = false,
     val bassBoostGain: Float = 0f,
     val bassBoostCutoffFreq: Float = 80f,
@@ -123,6 +133,9 @@ data class DSPSettings(
     val crossfeedStrength: Float = 0.5f,
     val clarityEnabled: Boolean = false,
     val clarityGain: Float = 0f,
+    val convolutionEnabled: Boolean = false,
+    val convolutionWetDry: Float = 0.5f,
+    val activeConvolutionId: String = "studio_room",
     val limiterEnabled: Boolean = true,
     val channelBalance: Float = 0f, // -1.0 (Left) to +1.0 (Right)
     val isMono: Boolean = false,

@@ -42,6 +42,9 @@ fun MainScreen(
     val fftMagnitudes by viewModel.fftMagnitudes.collectAsStateWithLifecycle()
     val peakLevels by viewModel.peakLevels.collectAsStateWithLifecycle()
     val appProfiles by viewModel.appProfiles.collectAsStateWithLifecycle()
+    val irProfiles by viewModel.irProfiles.collectAsStateWithLifecycle()
+    val isSleepTimerRunning by viewModel.isSleepTimerRunning.collectAsStateWithLifecycle()
+    val sleepTimerSeconds by viewModel.sleepTimerSeconds.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -100,11 +103,14 @@ fun MainScreen(
                     onApplyImportedPreset = { viewModel.applyImportedPreset(it) },
                     onSaveCustomPreset = { viewModel.saveCustomPreset(it) },
                     onBindCurrentDevice = { viewModel.bindPresetToCurrentDevice(settings.currentPresetId) },
+                    onSetTargetCurve = { viewModel.setTargetCurve(it) },
                     onNavigateToSetup = { selectedTab = 3 }
                 )
                 1 -> EffectsScreen(
                     settings = settings,
+                    irProfiles = irProfiles,
                     onPreampGainChange = { viewModel.setPreampGain(it) },
+                    onAutoPreampChange = { viewModel.setAutoPreamp(it) },
                     onChannelBalanceChange = { viewModel.setChannelBalance(it) },
                     onMonoChange = { viewModel.setMono(it) },
                     onLimiterChange = { viewModel.setLimiter(it) },
@@ -112,6 +118,8 @@ fun MainScreen(
                     onCrossfeedChange = { enabled, strength -> viewModel.setCrossfeed(enabled, strength) },
                     onVirtualizerChange = { enabled, strength -> viewModel.setVirtualizer(enabled, strength) },
                     onClarityChange = { enabled, gain -> viewModel.setClarity(enabled, gain) },
+                    onConvolutionChange = { enabled, profileId, wetDry -> viewModel.setConvolution(enabled, profileId, wetDry) },
+                    onImportCustomIR = { uri, name -> viewModel.importCustomIR(uri, name) },
                     onApplyHearingAudiogram = { audiogram, preset -> viewModel.applyHearingAudiogram(audiogram, preset) }
                 )
                 2 -> SessionsScreen(
@@ -127,11 +135,17 @@ fun MainScreen(
                 )
                 3 -> PermissionSetupSheet(
                     permissionStatus = permissionStatus,
+                    isSleepTimerRunning = isSleepTimerRunning,
+                    sleepTimerSeconds = sleepTimerSeconds,
                     onRequestShizuku = { viewModel.requestShizukuPermission() },
                     onGrantDumpShizuku = { viewModel.grantDumpViaShizuku() },
                     onGrantDumpRoot = { viewModel.grantDumpViaRoot() },
                     onOpenNotificationSettings = { viewModel.openNotificationSettings() },
                     onRequestBatteryOptimization = { viewModel.requestBatteryOptimization() },
+                    onStartSleepTimer = { viewModel.startSleepTimer(it) },
+                    onCancelSleepTimer = { viewModel.cancelSleepTimer() },
+                    onExportBackup = { viewModel.exportFullBackup(it) },
+                    onImportBackup = { viewModel.importFullBackup(it) },
                     onRefresh = { viewModel.refreshPermissions() }
                 )
             }

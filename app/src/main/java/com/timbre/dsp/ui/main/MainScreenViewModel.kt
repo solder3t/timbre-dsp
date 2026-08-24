@@ -1,6 +1,7 @@
 package com.timbre.dsp.ui.main
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.timbre.dsp.DSPEngine
@@ -11,9 +12,15 @@ import com.timbre.dsp.audio.AppProfileManager
 import com.timbre.dsp.audio.AudioEffectManager
 import com.timbre.dsp.audio.AudioSessionTracker
 import com.timbre.dsp.audio.DeviceProfileManager
+import com.timbre.dsp.audio.InstalledAppItem
 import com.timbre.dsp.audio.LiveAudioVisualizer
+import com.timbre.dsp.audio.SleepTimerManager
 import com.timbre.dsp.data.AutoEqRepository
+import com.timbre.dsp.data.BackupManager
+import com.timbre.dsp.data.ConvolutionRepository
+import com.timbre.dsp.data.ImpulseResponseProfile
 import com.timbre.dsp.data.PresetRepository
+import com.timbre.dsp.data.SettingsRepository
 import com.timbre.dsp.model.AppProfile
 import com.timbre.dsp.model.AudioSessionInfo
 import com.timbre.dsp.model.AutoEqProfile
@@ -27,6 +34,7 @@ import com.timbre.dsp.model.HearingAudiogram
 import com.timbre.dsp.model.OutputDeviceType
 import com.timbre.dsp.model.PermissionStatus
 import com.timbre.dsp.model.RoutingMode
+import com.timbre.dsp.model.TargetCurve
 import com.timbre.dsp.permission.PermissionManager
 import com.timbre.dsp.service.DSPTileService
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,13 +60,20 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
     val peakLevels: StateFlow<Pair<Float, Float>> = visualizer.peakLevels
     val currentDevice: StateFlow<DeviceProfile?> = deviceManager.currentDevice
     val appProfiles: StateFlow<List<AppProfile>> = appProfileManager.profilesList
+    val irProfiles: StateFlow<List<ImpulseResponseProfile>> = ConvolutionRepository.profiles
+    val sleepTimerSeconds: StateFlow<Int> = SleepTimerManager.remainingSeconds
+    val isSleepTimerRunning: StateFlow<Boolean> = SleepTimerManager.isTimerRunning
 
-    private val _settings = MutableStateFlow(com.timbre.dsp.data.SettingsRepository.loadSettings(application))
+    private val _settings = MutableStateFlow(SettingsRepository.loadSettings(application))
     val settings: StateFlow<DSPSettings> = _settings.asStateFlow()
 
     init {
         DSPEngine.start()
+        ConvolutionRepository.initialize(application)
+
         val initialSettings = _settings.value
+        applyInitialIR(initialSettings)
+
         DSPForegroundService.currentSettings = initialSettings
         DSPTileService.currentSettings = initialSettings
         effectManager.updateSettings(initialSettings)
@@ -84,14 +99,34 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    private fun applyInitialIR(settings: DSPSettings) {
+        val profile = ConvolutionRepository.getProfileById(settings.activeConvolutionId)
+            ?: ConvolutionRepository.profiles.value.firstOrNull()
+        if (profile != null) {
+            DSPEngine.setImpulseResponse(profile.leftChannel, profile.rightChannel, profile.leftChannel.size)
+        }
+    }
+
+    private fun computeEffectivePreamp(settings: DSPSettings): Float {
+        if (!settings.autoPreampEnabled) return settings.preampGain
+        val maxBandGain = settings.bands.filter { it.enabled }.maxOfOrNull { it.gain } ?: 0f
+        val bassExtra = if (settings.bassBoostEnabled) settings.bassBoostGain else 0f
+        val clarityExtra = if (settings.clarityEnabled) settings.clarityGain else 0f
+        val totalBoost = maxOf(0f, maxBandGain + bassExtra * 0.5f + clarityExtra * 0.5f)
+        return -totalBoost
+    }
+
     private fun pushSettings(newSettings: DSPSettings) {
-        _settings.value = newSettings
-        com.timbre.dsp.data.SettingsRepository.saveSettings(getApplication(), newSettings)
-        DSPTileService.isDspEnabled = newSettings.isEnabled
-        DSPTileService.currentSettings = newSettings
-        DSPForegroundService.currentSettings = newSettings
-        effectManager.updateSettings(newSettings)
-        DSPEngine.applySettings(newSettings)
+        val effectivePreamp = computeEffectivePreamp(newSettings)
+        val finalSettings = if (newSettings.autoPreampEnabled) newSettings.copy(preampGain = effectivePreamp) else newSettings
+
+        _settings.value = finalSettings
+        SettingsRepository.saveSettings(getApplication(), finalSettings)
+        DSPTileService.isDspEnabled = finalSettings.isEnabled
+        DSPTileService.currentSettings = finalSettings
+        DSPForegroundService.currentSettings = finalSettings
+        effectManager.updateSettings(finalSettings)
+        DSPEngine.applySettings(finalSettings)
     }
 
     fun toggleMaster(enabled: Boolean) {
@@ -153,7 +188,15 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun setPreampGain(gain: Float) {
-        pushSettings(_settings.value.copy(preampGain = gain))
+        pushSettings(_settings.value.copy(preampGain = gain, autoPreampEnabled = false))
+    }
+
+    fun setAutoPreamp(enabled: Boolean) {
+        pushSettings(_settings.value.copy(autoPreampEnabled = enabled))
+    }
+
+    fun setTargetCurve(curve: TargetCurve) {
+        pushSettings(_settings.value.copy(targetCurve = curve))
     }
 
     fun setChannelBalance(balance: Float) {
@@ -162,6 +205,71 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
 
     fun setMono(isMono: Boolean) {
         pushSettings(_settings.value.copy(isMono = isMono))
+    }
+
+    fun setLimiter(enabled: Boolean) {
+        pushSettings(_settings.value.copy(limiterEnabled = enabled))
+    }
+
+    fun setBassBoost(enabled: Boolean, gain: Float, cutoff: Float) {
+        pushSettings(_settings.value.copy(bassBoostEnabled = enabled, bassBoostGain = gain, bassBoostCutoffFreq = cutoff))
+    }
+
+    fun setCrossfeed(enabled: Boolean, strength: Float) {
+        pushSettings(_settings.value.copy(crossfeedEnabled = enabled, crossfeedStrength = strength))
+    }
+
+    fun setVirtualizer(enabled: Boolean, strength: Float) {
+        pushSettings(_settings.value.copy(virtualizerEnabled = enabled, virtualizerStrength = strength))
+    }
+
+    fun setClarity(enabled: Boolean, gain: Float) {
+        pushSettings(_settings.value.copy(clarityEnabled = enabled, clarityGain = gain))
+    }
+
+    fun setConvolution(enabled: Boolean, profileId: String, wetDry: Float) {
+        val profile = ConvolutionRepository.getProfileById(profileId)
+        if (profile != null) {
+            DSPEngine.setImpulseResponse(profile.leftChannel, profile.rightChannel, profile.leftChannel.size)
+        }
+        pushSettings(_settings.value.copy(
+            convolutionEnabled = enabled,
+            activeConvolutionId = profileId,
+            convolutionWetDry = wetDry
+        ))
+    }
+
+    fun importCustomIR(uri: Uri, fileName: String): Boolean {
+        val profile = ConvolutionRepository.importCustomIR(getApplication(), uri, fileName)
+        if (profile != null) {
+            setConvolution(enabled = true, profileId = profile.id, wetDry = _settings.value.convolutionWetDry)
+            return true
+        }
+        return false
+    }
+
+    fun startSleepTimer(minutes: Int) {
+        SleepTimerManager.startTimer(minutes) {
+            toggleMaster(false)
+        }
+    }
+
+    fun cancelSleepTimer() {
+        SleepTimerManager.cancelTimer()
+    }
+
+    fun exportFullBackup(uri: Uri): Boolean {
+        return BackupManager.exportBackup(getApplication(), uri)
+    }
+
+    fun importFullBackup(uri: Uri): Boolean {
+        val success = BackupManager.importBackup(getApplication(), uri)
+        if (success) {
+            val restored = SettingsRepository.loadSettings(getApplication())
+            pushSettings(restored)
+            PresetRepository.refreshPresets(getApplication())
+        }
+        return success
     }
 
     fun selectPreset(preset: EQPreset) {
@@ -207,54 +315,8 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
     fun deleteCustomPreset(id: String) {
         PresetRepository.deleteCustomPreset(id)
         if (_settings.value.currentPresetId == id) {
-            selectPreset(PresetRepository.builtInPresets.first())
+            resetBands()
         }
-    }
-
-    fun setBassBoost(enabled: Boolean, gain: Float, cutoff: Float = 80f) {
-        pushSettings(
-            _settings.value.copy(
-                bassBoostEnabled = enabled,
-                bassBoostGain = gain,
-                bassBoostCutoffFreq = cutoff
-            )
-        )
-    }
-
-    fun setVirtualizer(enabled: Boolean, strength: Float) {
-        pushSettings(
-            _settings.value.copy(
-                virtualizerEnabled = enabled,
-                virtualizerStrength = strength
-            )
-        )
-    }
-
-    fun setCrossfeed(enabled: Boolean, strength: Float) {
-        pushSettings(
-            _settings.value.copy(
-                crossfeedEnabled = enabled,
-                crossfeedStrength = strength
-            )
-        )
-    }
-
-    fun setClarity(enabled: Boolean, gain: Float) {
-        pushSettings(
-            _settings.value.copy(
-                clarityEnabled = enabled,
-                clarityGain = gain
-            )
-        )
-    }
-
-    fun setLimiter(enabled: Boolean) {
-        pushSettings(_settings.value.copy(limiterEnabled = enabled))
-    }
-
-    fun setRoutingMode(mode: RoutingMode) {
-        routingManager.setMode(mode)
-        pushSettings(_settings.value.copy(routingMode = mode))
     }
 
     fun bindPresetToCurrentDevice(presetId: String) {
@@ -262,7 +324,7 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
         deviceManager.bindPresetToDevice(dev.deviceId, dev.deviceName, dev.deviceType, presetId)
     }
 
-    fun getInstalledMediaApps(): List<com.timbre.dsp.audio.InstalledAppItem> {
+    fun getInstalledMediaApps(): List<InstalledAppItem> {
         return appProfileManager.getInstalledMediaApps()
     }
 
@@ -301,7 +363,9 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun requestShizukuPermission() {
-        permissionManager.requestShizukuPermission()
+        viewModelScope.launch {
+            permissionManager.requestShizukuPermission()
+        }
     }
 
     fun grantDumpViaShizuku() {
@@ -328,11 +392,6 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
 
     fun rescanSessions() {
         sessionTracker.scanAudioFlinger()
-        deviceManager.detectCurrentOutputDevice()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        visualizer.release()
     }
 }
+
