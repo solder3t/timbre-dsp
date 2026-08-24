@@ -108,6 +108,89 @@ class DSPRepositoryTest {
   }
 
   @Test
+  fun testAutoEqBlockParsing() {
+    val blockText = """
+      Preamp: -4.0 dB
+      Filter 1: ON
+      Type: PK
+      Fc: 1.2 kHz
+      Gain: -3.5 dB
+      Q: 1.41
+      
+      Filter 2: ON
+      Type: LSC
+      Fc: 80 Hz
+      Gain: 5.0 dB
+      Q: 0.71
+    """.trimIndent()
+
+    val parsed = EqualizerApoParser.parse(blockText, "Block Test")
+    assertEquals(-4.0f, parsed.preampGain, 0.01f)
+    assertEquals(2, parsed.bands.size)
+    assertEquals(1200f, parsed.bands[0].frequency, 0.01f)
+    assertEquals(-3.5f, parsed.bands[0].gain, 0.01f)
+    assertEquals(FilterType.PEAK, parsed.bands[0].type)
+
+    assertEquals(80f, parsed.bands[1].frequency, 0.01f)
+    assertEquals(5.0f, parsed.bands[1].gain, 0.01f)
+    assertEquals(FilterType.LOW_SHELF, parsed.bands[1].type)
+  }
+
+  @Test
+  fun testJsonPeqParsing() {
+    val jsonArrayText = """
+      [
+        {"frequency": 60.0, "gain": 4.5, "q": 1.41, "type": "LOW_SHELF", "enabled": true},
+        {"frequency": 1200.0, "gain": -2.0, "q": 2.0, "type": "PEAK", "enabled": true}
+      ]
+    """.trimIndent()
+
+    val parsedArray = EqualizerApoParser.parse(jsonArrayText, "JSON Array Test")
+    assertEquals(2, parsedArray.bands.size)
+    assertEquals(60.0f, parsedArray.bands[0].frequency, 0.01f)
+    assertEquals(4.5f, parsedArray.bands[0].gain, 0.01f)
+    assertEquals(FilterType.LOW_SHELF, parsedArray.bands[0].type)
+
+    val jsonObjectText = """
+      {
+        "name": "Audiophile Harman",
+        "preamp": -2.5,
+        "bands": [
+          {"frequency": 105.0, "gain": 5.5, "q": 0.71, "type": "LSC"},
+          {"frequency": 3000.0, "gain": -1.5, "q": 1.8, "type": "PK"}
+        ]
+      }
+    """.trimIndent()
+
+    val parsedObj = EqualizerApoParser.parse(jsonObjectText, "Fallback Name")
+    assertEquals("Audiophile Harman", parsedObj.name)
+    assertEquals(-2.5f, parsedObj.preampGain, 0.01f)
+    assertEquals(2, parsedObj.bands.size)
+  }
+
+  @Test
+  fun testGraphicEqParsing() {
+    val graphicEqText = "GraphicEQ: 20 0.0; 50 2.5; 100 5.0; 1000 -2.0; 10000 3.0"
+    val parsed = EqualizerApoParser.parse(graphicEqText, "GraphicEQ Test")
+    assertEquals(5, parsed.bands.size)
+    assertEquals(20f, parsed.bands[0].frequency, 0.01f)
+    assertEquals(0f, parsed.bands[0].gain, 0.01f)
+    assertEquals(50f, parsed.bands[1].frequency, 0.01f)
+    assertEquals(2.5f, parsed.bands[1].gain, 0.01f)
+  }
+
+  @Test
+  fun testParsePreview() {
+    val validSample = "Filter 1: ON PK Fc 1000 Hz Gain 3.0 dB Q 1.41\nFilter 2: ON PK Fc 2000 Hz Gain -2.0 dB Q 1.41"
+    val preview = EqualizerApoParser.parsePreview(validSample)
+    assertTrue(preview.isValid)
+    assertEquals(2, preview.bandCount)
+
+    val emptyPreview = EqualizerApoParser.parsePreview("")
+    assertTrue(!emptyPreview.isValid)
+  }
+
+  @Test
   fun testTargetCurveValues() {
     val curves = TargetCurve.values()
     assertTrue(curves.contains(TargetCurve.HARMAN_OVER_EAR))

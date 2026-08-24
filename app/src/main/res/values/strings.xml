@@ -184,13 +184,25 @@
     <string name="dialog_preset_name_label">Preset Name</string>
     <string name="dialog_preset_name_placeholder">Enter a name for your custom EQ preset…</string>
 
-    <!-- Dialogs: Import / Export -->
-    <string name="dialog_import_export_title">Import / Export Equalizer Preset</string>
-    <string name="dialog_import_export_desc">Import Peace / Equalizer APO config text or export current DSP settings.</string>
-    <string name="tab_import_text">Import from Text / Peace</string>
-    <string name="tab_export_settings">Export Current Settings</string>
-    <string name="dialog_paste_config_placeholder">Paste Peace EQ / AutoEq text configuration here…</string>
-    <string name="btn_import_preset">Import Preset</string>
+    <!-- Dialogs: Delete Preset -->
+    <string name="dialog_delete_preset_title">Delete Custom Preset</string>
+    <string name="dialog_delete_preset_message">Are you sure you want to delete preset \"%1$s\"? This cannot be undone.</string>
+    <string name="btn_delete">Delete</string>
+    <string name="preset_deleted_toast">Preset \"%1$s\" deleted</string>
+
+    <!-- Dialogs: Import / Export PEQ -->
+    <string name="dialog_import_export_title">Import / Export PEQ Preset</string>
+    <string name="dialog_import_export_desc">Import Peace EQ, Equalizer APO, AutoEq, or JSON profiles, or export current settings.</string>
+    <string name="tab_import_text">Import PEQ / Text</string>
+    <string name="tab_export_settings">Export Configuration</string>
+    <string name="dialog_paste_config_placeholder">Paste Peace EQ, AutoEq, GraphicEQ, or JSON configuration here…</string>
+    <string name="btn_choose_file">Select File from Device</string>
+    <string name="import_preview_detected">Detected: %1$d bands • Preamp: %2$.1f dB • Mode: %3$s</string>
+    <string name="import_preview_invalid">No valid PEQ filters detected yet.</string>
+    <string name="import_file_loaded">Loaded PEQ configuration from file</string>
+    <string name="import_file_failed">Failed to read configuration file</string>
+    <string name="btn_import_preset">Apply Preset</string>
+    <string name="btn_import_and_save">Apply &amp; Save to Library</string>
     <string name="btn_copy_clipboard">Copy to Clipboard</string>
     <string name="msg_exported_copied">Settings copied to clipboard!</string>
 

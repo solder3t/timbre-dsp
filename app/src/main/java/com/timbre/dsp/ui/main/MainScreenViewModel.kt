@@ -68,6 +68,7 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
     val settings: StateFlow<DSPSettings> = _settings.asStateFlow()
 
     init {
+        PresetRepository.init(application)
         DSPEngine.start()
         ConvolutionRepository.initialize(application)
 
@@ -307,17 +308,22 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
         )
     }
 
-    fun applyImportedPreset(preset: EQPreset) {
-        selectPreset(preset)
+    fun applyImportedPreset(preset: EQPreset, saveToLibrary: Boolean = false) {
+        if (saveToLibrary) {
+            val saved = PresetRepository.addCustomPreset(preset, getApplication())
+            selectPreset(saved)
+        } else {
+            selectPreset(preset)
+        }
     }
 
     fun saveCustomPreset(name: String) {
-        val newPreset = PresetRepository.saveCustomPreset(name, _settings.value)
+        val newPreset = PresetRepository.saveCustomPreset(name, _settings.value, getApplication())
         pushSettings(_settings.value.copy(currentPresetId = newPreset.id))
     }
 
     fun deleteCustomPreset(id: String) {
-        PresetRepository.deleteCustomPreset(id)
+        PresetRepository.deleteCustomPreset(id, getApplication())
         if (_settings.value.currentPresetId == id) {
             resetBands()
         }

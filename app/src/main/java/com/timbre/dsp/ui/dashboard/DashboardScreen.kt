@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.Headset
 import androidx.compose.material.icons.filled.ImportExport
@@ -35,8 +36,10 @@ import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -110,8 +113,9 @@ fun DashboardScreen(
     onResetBands: () -> Unit,
     onSelectPreset: (EQPreset) -> Unit,
     onApplyAutoEq: (AutoEqProfile) -> Unit,
-    onApplyImportedPreset: (EQPreset) -> Unit,
+    onApplyImportedPreset: (EQPreset, Boolean) -> Unit,
     onSaveCustomPreset: (String) -> Unit,
+    onDeleteCustomPreset: (String) -> Unit = {},
     onBindCurrentDevice: () -> Unit,
     onSetTargetCurve: (TargetCurve) -> Unit,
     onNavigateToSetup: () -> Unit,
@@ -125,6 +129,7 @@ fun DashboardScreen(
     var showSavePresetDialog by remember { mutableStateOf(false) }
     var showImportExportDialog by remember { mutableStateOf(false) }
     var editingParametricBand by remember { mutableStateOf<EQBand?>(null) }
+    var presetToDelete by remember { mutableStateOf<EQPreset?>(null) }
 
     if (showAiEqDialog) {
         AiEqDialog(
@@ -170,9 +175,33 @@ fun DashboardScreen(
         ImportExportDialog(
             currentPreset = currentPreset,
             onDismiss = { showImportExportDialog = false },
-            onImportPreset = { preset ->
-                onApplyImportedPreset(preset)
+            onImportPreset = { preset, saveToLibrary ->
+                onApplyImportedPreset(preset, saveToLibrary)
                 showImportExportDialog = false
+            }
+        )
+    }
+
+    if (presetToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { presetToDelete = null },
+            title = { Text(stringResource(R.string.dialog_delete_preset_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_preset_message, presetToDelete?.name ?: "")) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        presetToDelete?.let { onDeleteCustomPreset(it.id) }
+                        presetToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(stringResource(R.string.btn_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { presetToDelete = null }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
             }
         )
     }
@@ -535,6 +564,21 @@ fun DashboardScreen(
                         label = { Text(preset.name) },
                         leadingIcon = if (isSelected) {
                             { Icon(Icons.Default.CheckCircle, contentDescription = null) }
+                        } else null,
+                        trailingIcon = if (preset.isCustom) {
+                            {
+                                IconButton(
+                                    onClick = { presetToDelete = preset },
+                                    modifier = Modifier.size(18.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Delete preset",
+                                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                }
+                            }
                         } else null
                     )
                 }

@@ -3,8 +3,14 @@ package com.timbre.dsp.ui.components
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,8 +19,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,13 +41,17 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.timbre.dsp.R
 import com.timbre.dsp.data.EqualizerApoParser
+import com.timbre.dsp.model.EQMode
 import com.timbre.dsp.model.EQPreset
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,7 +59,7 @@ import com.timbre.dsp.model.EQPreset
 fun ImportExportDialog(
     currentPreset: EQPreset,
     onDismiss: () -> Unit,
-    onImportPreset: (EQPreset) -> Unit
+    onImportPreset: (preset: EQPreset, saveToLibrary: Boolean) -> Unit
 ) {
     val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -55,6 +68,44 @@ fun ImportExportDialog(
 
     val exportedText = remember(currentPreset) {
         EqualizerApoParser.exportToPeace(currentPreset)
+    }
+
+    val parsePreview = remember(importText) {
+        EqualizerApoParser.parsePreview(importText)
+    }
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                if (inputStream != null) {
+                    val text = inputStream.bufferedReader().use { it.readText() }
+                    inputStream.close()
+                    importText = text
+
+                    // Extract file name without extension
+                    var fileName = "Imported Preset"
+                    val cursor = context.contentResolver.query(uri, null, null, null, null)
+                    cursor?.use {
+                        if (it.moveToFirst()) {
+                            val nameIdx = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                            if (nameIdx >= 0) {
+                                val fullName = it.getString(nameIdx)
+                                if (!fullName.isNullOrBlank()) {
+                                    fileName = fullName.substringBeforeLast(".")
+                                }
+                            }
+                        }
+                    }
+                    presetName = fileName
+                    Toast.makeText(context, context.getString(R.string.import_file_loaded), Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, context.getString(R.string.import_file_failed), Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     AlertDialog(
@@ -93,28 +144,82 @@ fun ImportExportDialog(
                     OutlinedTextField(
                         value = importText,
                         onValueChange = { importText = it },
-                        label = { Text("Peace EQ / AutoEq Text") },
+                        label = { Text("Peace EQ / AutoEq / JSON Text") },
                         placeholder = { Text(stringResource(R.string.dialog_paste_config_placeholder)) },
                         textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                        modifier = Modifier.fillMaxWidth().height(160.dp),
+                        modifier = Modifier.fillMaxWidth().height(140.dp),
                         shape = RoundedCornerShape(12.dp)
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedButton(
-                        onClick = {
-                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = clipboard.primaryClip
-                            if (clip != null && clip.itemCount > 0) {
-                                importText = clip.getItemAt(0).text.toString()
-                                Toast.makeText(context, "Pasted from clipboard", Toast.LENGTH_SHORT).show()
+                    // Parse Preview Card
+                    if (importText.isNotBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (parsePreview.isValid)
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                                    else
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                )
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = if (parsePreview.isValid) Icons.Default.CheckCircle else Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = if (parsePreview.isValid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(end = 6.dp)
+                                )
+                                Text(
+                                    text = if (parsePreview.isValid) {
+                                        val modeStr = if (parsePreview.eqMode == EQMode.GRAPHIC_10) "10-Band Graphic" else "Parametric"
+                                        stringResource(R.string.import_preview_detected, parsePreview.bandCount, parsePreview.preampGain, modeStr)
+                                    } else {
+                                        stringResource(R.string.import_preview_invalid)
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (parsePreview.isValid) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.ContentPaste, contentDescription = null)
-                        Text(modifier = Modifier.padding(start = 8.dp), text = "Paste from Clipboard")
+                        OutlinedButton(
+                            onClick = {
+                                filePickerLauncher.launch(arrayOf("text/*", "application/json", "*/*"))
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.FolderOpen, contentDescription = null)
+                            Spacer(modifier = Modifier.padding(start = 4.dp))
+                            Text(stringResource(R.string.btn_choose_file), style = MaterialTheme.typography.labelSmall)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = clipboard.primaryClip
+                                if (clip != null && clip.itemCount > 0) {
+                                    importText = clip.getItemAt(0).text.toString()
+                                    Toast.makeText(context, "Pasted from clipboard", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.ContentPaste, contentDescription = null)
+                            Spacer(modifier = Modifier.padding(start = 4.dp))
+                            Text("Paste", style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 } else {
                     // Export Tab
@@ -147,17 +252,19 @@ fun ImportExportDialog(
         },
         confirmButton = {
             if (selectedTab == 0) {
-                Button(
-                    onClick = {
-                        if (importText.isNotBlank()) {
-                            val imported = EqualizerApoParser.parse(importText, presetName)
-                            onImportPreset(imported)
-                            onDismiss()
-                        }
-                    },
-                    enabled = importText.isNotBlank()
-                ) {
-                    Text(stringResource(R.string.btn_import_preset))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Button(
+                        onClick = {
+                            if (importText.isNotBlank()) {
+                                val imported = EqualizerApoParser.parse(importText, presetName)
+                                onImportPreset(imported, true)
+                                onDismiss()
+                            }
+                        },
+                        enabled = importText.isNotBlank() && parsePreview.isValid
+                    ) {
+                        Text(stringResource(R.string.btn_import_and_save))
+                    }
                 }
             } else {
                 TextButton(onClick = onDismiss) {
