@@ -36,6 +36,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.timbre.dsp.R
 import androidx.compose.ui.unit.dp
 import com.timbre.dsp.model.EQBand
 import com.timbre.dsp.model.EQPreset
@@ -151,7 +153,7 @@ fun HearingTestWizard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Hearing, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Hearing Threshold Test")
+                Text(stringResource(R.string.hearing_test_title))
             }
         },
         text = {
@@ -184,7 +186,7 @@ fun HearingTestWizard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Tone Level", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.hearing_tone_level), style = MaterialTheme.typography.bodySmall)
                     Text(String.format("%.1f dB", currentVolumeGain), style = MaterialTheme.typography.bodySmall)
                 }
 
@@ -259,7 +261,7 @@ fun HearingTestWizard(
                 stopTone()
                 onDismiss()
             }) {
-                Text("Cancel")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

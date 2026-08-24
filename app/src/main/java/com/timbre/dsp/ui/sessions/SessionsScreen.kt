@@ -475,7 +475,7 @@ private fun SessionItemCard(
                 ) {
                     Icon(Icons.Default.Tune, contentDescription = null)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Auto-Profile")
+                    Text(stringResource(R.string.sessions_auto_profile_tag))
                 }
 
                 DropdownMenu(

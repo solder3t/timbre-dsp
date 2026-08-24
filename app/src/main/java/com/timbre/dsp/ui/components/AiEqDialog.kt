@@ -42,6 +42,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.timbre.dsp.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -234,7 +236,7 @@ fun AiEqDialog(
                                         aiPrefs = aiPrefs.copy(serverUrl = it)
                                         AiPreferencesRepository.save(context, aiPrefs)
                                     },
-                                    label = { Text("Ollama URL") },
+                                    label = { Text(stringResource(R.string.ai_dialog_ollama_url)) },
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true
                                 )
@@ -245,7 +247,7 @@ fun AiEqDialog(
                                         aiPrefs = aiPrefs.copy(apiKey = it)
                                         AiPreferencesRepository.save(context, aiPrefs)
                                     },
-                                    label = { Text("${aiPrefs.provider.displayName} API Key") },
+                                    label = { Text(stringResource(R.string.ai_dialog_provider_api_key, aiPrefs.provider.displayName)) },
                                     leadingIcon = { Icon(Icons.Default.Key, contentDescription = null) },
                                     visualTransformation = PasswordVisualTransformation(),
                                     modifier = Modifier.fillMaxWidth(),
@@ -257,7 +259,7 @@ fun AiEqDialog(
                 }
 
                 Text(
-                    text = "Describe your desired sound signature, headphones model, or acoustic vibe:",
+                    text = stringResource(R.string.ai_dialog_desc),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -283,8 +285,8 @@ fun AiEqDialog(
                 OutlinedTextField(
                     value = prompt,
                     onValueChange = { prompt = it },
-                    label = { Text("Acoustic Prompt") },
-                    placeholder = { Text("e.g. Sennheiser HD650 sub-bass boost with smooth velvety mids") },
+                    label = { Text(stringResource(R.string.ai_dialog_acoustic_prompt)) },
+                    placeholder = { Text(stringResource(R.string.ai_dialog_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
                     maxLines = 4
@@ -353,7 +355,7 @@ fun AiEqDialog(
                 ) {
                     Icon(Icons.Default.Tune, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Apply to DSP")
+                    Text(stringResource(R.string.btn_apply_to_dsp))
                 }
             } else {
                 Button(
@@ -396,18 +398,18 @@ fun AiEqDialog(
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Engineering...")
+                        Text(stringResource(R.string.ai_dialog_engineering))
                     } else {
                         Icon(Icons.Default.Psychology, contentDescription = null)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Generate")
+                        Text(stringResource(R.string.btn_generate))
                     }
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

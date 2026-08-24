@@ -144,7 +144,7 @@ fun ImportExportDialog(
                     OutlinedTextField(
                         value = importText,
                         onValueChange = { importText = it },
-                        label = { Text("PEQ / AutoEq / Peace / JSON Text") },
+                        label = { Text(stringResource(R.string.import_input_label)) },
                         placeholder = { Text(stringResource(R.string.dialog_paste_config_placeholder)) },
                         textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         modifier = Modifier.fillMaxWidth().height(140.dp),
@@ -162,7 +162,7 @@ fun ImportExportDialog(
                                 .background(
                                     if (parsePreview.isValid)
                                         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-                                    else
+                                     else
                                         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                                 )
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
@@ -211,14 +211,14 @@ fun ImportExportDialog(
                                 val clip = clipboard.primaryClip
                                 if (clip != null && clip.itemCount > 0) {
                                     importText = clip.getItemAt(0).text.toString()
-                                    Toast.makeText(context, "Pasted from clipboard", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_pasted_clipboard), Toast.LENGTH_SHORT).show()
                                 }
                             },
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(Icons.Default.ContentPaste, contentDescription = null)
                             Spacer(modifier = Modifier.padding(start = 4.dp))
-                            Text("Paste", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.btn_paste), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 } else {
@@ -227,7 +227,7 @@ fun ImportExportDialog(
                         value = exportedText,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Parametric EQ / Peace Format") },
+                        label = { Text(stringResource(R.string.export_output_label)) },
                         textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         modifier = Modifier.fillMaxWidth().height(200.dp),
                         shape = RoundedCornerShape(12.dp)
@@ -238,9 +238,9 @@ fun ImportExportDialog(
                     OutlinedButton(
                         onClick = {
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("Peace EQ Configuration", exportedText)
+                            val clip = ClipData.newPlainText("PEQ Configuration", exportedText)
                             clipboard.setPrimaryClip(clip)
-                            Toast.makeText(context, "Configuration copied to clipboard", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.msg_exported_copied), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {

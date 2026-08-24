@@ -172,7 +172,7 @@ fun PermissionSetupSheet(
                         FilterChip(
                             selected = isSleepTimerRunning && (sleepTimerSeconds in ((mins - 1) * 60)..(mins * 60)),
                             onClick = { onStartSleepTimer(mins) },
-                            label = { Text("${mins}m") }
+                            label = { Text(stringResource(R.string.mins_format, mins)) }
                         )
                     }
                     if (isSleepTimerRunning) {
@@ -197,9 +197,9 @@ fun PermissionSetupSheet(
                     Icon(Icons.Default.Backup, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text("Backup & Restore Suite", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.backup_suite_title), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Export/import all custom presets, device profiles, & app rules",
+                            stringResource(R.string.backup_suite_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -218,7 +218,7 @@ fun PermissionSetupSheet(
                     ) {
                         Icon(Icons.Default.Upload, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Export Backup")
+                        Text(stringResource(R.string.btn_export_backup))
                     }
 
                     OutlinedButton(
@@ -227,7 +227,7 @@ fun PermissionSetupSheet(
                     ) {
                         Icon(Icons.Default.Download, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Restore")
+                        Text(stringResource(R.string.btn_restore_backup))
                     }
                 }
             }
@@ -282,7 +282,7 @@ fun PermissionSetupSheet(
                         onClick = onGrantDumpRoot,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Grant DUMP via SU")
+                        Text(stringResource(R.string.btn_grant_dump_su))
                     }
                 }
                 OutlinedButton(
@@ -374,7 +374,7 @@ fun PermissionSetupSheet(
                         IconButton(onClick = {
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             clipboard.setPrimaryClip(ClipData.newPlainText("ADB Command", PermissionManager.ADB_DUMP_COMMAND))
-                            Toast.makeText(context, "Command copied to clipboard", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_copied_clipboard), Toast.LENGTH_SHORT).show()
                         }) {
                             Icon(Icons.Default.ContentCopy, contentDescription = "Copy")
                         }
@@ -419,12 +419,12 @@ fun PermissionSetupSheet(
                             }
                             context.startActivity(intent)
                         } catch (e: Exception) {
-                            Toast.makeText(context, "Could not open sound settings", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_could_not_open_sound_settings), Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Open System Sound Settings")
+                    Text(stringResource(R.string.btn_open_sound_settings))
                 }
             }
         }

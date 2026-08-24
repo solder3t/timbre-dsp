@@ -72,13 +72,13 @@ fun UpdateDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "New Version: v${updateInfo.latestVersion}",
+                            text = stringResource(R.string.update_new_version_format, updateInfo.latestVersion),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Current: v${UpdateChecker.CURRENT_VERSION}",
+                            text = stringResource(R.string.update_current_version_format, UpdateChecker.CURRENT_VERSION),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -88,7 +88,7 @@ fun UpdateDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "Release Notes:",
+                    text = stringResource(R.string.update_release_notes_label),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Medium
                 )
@@ -105,7 +105,7 @@ fun UpdateDialog(
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        text = updateInfo.changelog.ifBlank { "Performance improvements and bug fixes." },
+                        text = updateInfo.changelog.ifBlank { stringResource(R.string.update_default_notes) },
                         style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -90,9 +90,9 @@ fun EffectsScreen(
             val fileName = uri.lastPathSegment?.substringAfterLast('/') ?: "custom_ir.wav"
             val success = onImportCustomIR(uri, fileName)
             if (success) {
-                Toast.makeText(context, "Loaded impulse response: $fileName", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.toast_loaded_ir, fileName), Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Failed to parse .wav / .irs file", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.toast_failed_ir), Toast.LENGTH_SHORT).show()
             }
         }
     }

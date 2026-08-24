@@ -43,7 +43,7 @@ fun SavePresetDialog(
                     value = presetName,
                     onValueChange = { presetName = it },
                     label = { Text(stringResource(R.string.dialog_preset_name_label)) },
-                    placeholder = { Text("e.g. My Bass Staging") },
+                    placeholder = { Text(stringResource(R.string.dialog_preset_name_placeholder)) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()

@@ -28,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.timbre.dsp.R
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -93,7 +95,7 @@ fun EQCurveVisualizer(
                             .height(3.dp)
                     ) {}
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Current EQ", style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.visualizer_current_eq), style = MaterialTheme.typography.labelSmall)
 
                     if (targetCurve != TargetCurve.NONE) {
                         Spacer(modifier = Modifier.width(12.dp))
@@ -105,7 +107,7 @@ fun EQCurveVisualizer(
                                 .height(2.dp)
                         ) {}
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Target: ${targetCurve.displayName}", style = MaterialTheme.typography.labelSmall, color = targetCurveColor)
+                        Text(stringResource(R.string.visualizer_target_curve_label, targetCurve.displayName), style = MaterialTheme.typography.labelSmall, color = targetCurveColor)
                     }
                 }
 
@@ -117,7 +119,7 @@ fun EQCurveVisualizer(
                     ) {
                         Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.height(12.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Target Curve", style = MaterialTheme.typography.labelSmall)
+                        Text(stringResource(R.string.visualizer_target_curve), style = MaterialTheme.typography.labelSmall)
                     }
 
                     DropdownMenu(

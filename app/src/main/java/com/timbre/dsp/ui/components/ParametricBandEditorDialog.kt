@@ -69,7 +69,7 @@ fun ParametricBandEditorDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Edit Band #${band.index + 1}")
+                Text(stringResource(R.string.dialog_param_edit_band, band.index + 1))
                 if (canDelete) {
                     IconButton(onClick = {
                         onDeleteBand()
@@ -120,7 +120,7 @@ fun ParametricBandEditorDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Center Frequency", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.param_center_frequency), style = MaterialTheme.typography.bodySmall)
                     Text("${frequency.toInt()} Hz", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                 }
                 Slider(
@@ -137,7 +137,7 @@ fun ParametricBandEditorDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Band Gain", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.param_band_gain), style = MaterialTheme.typography.bodySmall)
                         Text(String.format(Locale.US, "%.1f dB", gain), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                     }
                     Slider(
@@ -153,7 +153,7 @@ fun ParametricBandEditorDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Bandwidth (Q Factor)", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.param_bandwidth_q), style = MaterialTheme.typography.bodySmall)
                     Text(String.format(Locale.US, "Q = %.2f", q), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                 }
                 Slider(
@@ -169,7 +169,7 @@ fun ParametricBandEditorDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Band Active", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.param_band_active), style = MaterialTheme.typography.bodyMedium)
                     Switch(checked = isEnabled, onCheckedChange = { isEnabled = it })
                 }
             }

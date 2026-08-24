@@ -29,6 +29,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.timbre.dsp.R
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -41,8 +43,8 @@ import java.util.zip.ZipOutputStream
 
 @Composable
 fun MagiskInstallerDialog(
-    isRootAvailable: Boolean,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    isRootAvailable: Boolean
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -55,7 +57,7 @@ fun MagiskInstallerDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Build, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Magisk / KernelSU Root Engine")
+                Text(stringResource(R.string.magisk_dialog_title))
             }
         },
         text = {
@@ -85,7 +87,7 @@ fun MagiskInstallerDialog(
                             isProcessing = false
                             if (file != null) {
                                 statusMessage = "Module exported to: ${file.absolutePath}"
-                                Toast.makeText(context, "Exported to Downloads", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, context.getString(R.string.toast_exported_downloads), Toast.LENGTH_LONG).show()
                             } else {
                                 statusMessage = "Failed to build module zip"
                             }
@@ -96,7 +98,7 @@ fun MagiskInstallerDialog(
                 ) {
                     Icon(Icons.Default.FileDownload, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Export Magisk Module .zip")
+                    Text(stringResource(R.string.btn_export_magisk_zip))
                 }
 
                 if (isRootAvailable) {
@@ -122,14 +124,14 @@ fun MagiskInstallerDialog(
                     ) {
                         Icon(Icons.Default.FlashOn, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Flash Directly via Root Shell")
+                        Text(stringResource(R.string.btn_flash_root_shell))
                     }
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(stringResource(R.string.btn_close))
             }
         }
     )

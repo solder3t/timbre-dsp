@@ -131,14 +131,14 @@ fun SettingsScreen(
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri != null) {
             val ok = onExportBackup(uri)
-            Toast.makeText(context, if (ok) "Configuration backup exported!" else "Export failed", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, if (ok) context.getString(R.string.toast_backup_exported) else context.getString(R.string.toast_backup_export_failed), Toast.LENGTH_SHORT).show()
         }
     }
 
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
             val ok = onImportBackup(uri)
-            Toast.makeText(context, if (ok) "Configuration restored successfully!" else "Invalid backup file", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, if (ok) context.getString(R.string.toast_backup_restored) else context.getString(R.string.toast_backup_invalid), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -347,7 +347,7 @@ fun SettingsScreen(
                         onClick = onGrantDumpRoot,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Grant DUMP via SU")
+                        Text(stringResource(R.string.btn_grant_dump_su))
                     }
                 }
                 OutlinedButton(
@@ -435,7 +435,7 @@ fun SettingsScreen(
                         IconButton(onClick = {
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             clipboard.setPrimaryClip(ClipData.newPlainText("ADB Command", PermissionManager.ADB_DUMP_COMMAND))
-                            Toast.makeText(context, "Command copied to clipboard", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_copied_clipboard), Toast.LENGTH_SHORT).show()
                         }) {
                             Icon(Icons.Default.ContentCopy, contentDescription = "Copy")
                         }
@@ -476,12 +476,12 @@ fun SettingsScreen(
                             }
                             context.startActivity(intent)
                         } catch (e: Exception) {
-                            Toast.makeText(context, "Could not open sound settings", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_could_not_open_sound_settings), Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Open System Sound Settings")
+                    Text(stringResource(R.string.btn_open_sound_settings))
                 }
             }
         }
@@ -584,7 +584,7 @@ fun SettingsScreen(
                         FilterChip(
                             selected = isSleepTimerRunning && (sleepTimerSeconds in ((mins - 1) * 60)..(mins * 60)),
                             onClick = { onStartSleepTimer(mins) },
-                            label = { Text("${mins}m") }
+                            label = { Text(stringResource(R.string.mins_format, mins)) }
                         )
                     }
                     if (isSleepTimerRunning) {
@@ -605,9 +605,9 @@ fun SettingsScreen(
                     Icon(Icons.Default.Backup, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text("Backup & Restore Suite", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.backup_suite_title), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Export/import all custom presets, device profiles, & app rules",
+                            stringResource(R.string.backup_suite_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -625,7 +625,7 @@ fun SettingsScreen(
                     ) {
                         Icon(Icons.Default.Upload, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Export Backup")
+                        Text(stringResource(R.string.btn_export_backup))
                     }
 
                     OutlinedButton(
@@ -634,7 +634,7 @@ fun SettingsScreen(
                     ) {
                         Icon(Icons.Default.Download, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Restore")
+                        Text(stringResource(R.string.btn_restore_backup))
                     }
                 }
             }
@@ -653,7 +653,7 @@ fun SettingsScreen(
                     Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text("Timbre DSP v${UpdateChecker.CURRENT_VERSION}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.app_version_format, UpdateChecker.CURRENT_VERSION), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(
                             text = stringResource(R.string.about_app_desc),
                             style = MaterialTheme.typography.bodySmall,

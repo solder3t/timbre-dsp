@@ -272,4 +272,69 @@
     <string name="about_github_desc">github.com/solder3t/timbre-dsp</string>
     <string name="about_issues_title">Report an Issue</string>
     <string name="about_issues_desc">Submit bugs, feature requests, or device measurements</string>
+
+    <!-- Visualizer & EQ Graph -->
+    <string name="visualizer_current_eq">Current EQ</string>
+    <string name="visualizer_target_curve">Target Curve</string>
+    <string name="visualizer_target_curve_label">Target: %1$s</string>
+
+    <!-- Dialogs: AI Assistant Extra -->
+    <string name="ai_dialog_ollama_url">Ollama Endpoint URL</string>
+    <string name="ai_dialog_provider_api_key">%1$s API Key</string>
+    <string name="ai_dialog_acoustic_prompt">Acoustic Prompt</string>
+    <string name="btn_apply_to_dsp">Apply to DSP</string>
+    <string name="ai_dialog_engineering">Engineering…</string>
+    <string name="btn_generate">Generate</string>
+
+    <!-- Dialogs: Parametric Band Editor Extra -->
+    <string name="dialog_param_edit_band">Edit Band #%1$d</string>
+    <string name="param_center_frequency">Center Frequency</string>
+    <string name="param_band_gain">Band Gain</string>
+    <string name="param_bandwidth_q">Bandwidth (Q Factor)</string>
+    <string name="param_band_active">Band Active</string>
+
+    <!-- Import / Export Labels -->
+    <string name="import_input_label">PEQ / AutoEq / Peace / JSON Text</string>
+    <string name="export_output_label">Parametric EQ / Peace Format</string>
+    <string name="btn_paste">Paste</string>
+    <string name="toast_pasted_clipboard">Pasted from clipboard</string>
+    <string name="toast_copied_clipboard">Command copied to clipboard</string>
+
+    <!-- Magisk Installer Dialog -->
+    <string name="magisk_dialog_title">Magisk / KernelSU Root Engine</string>
+    <string name="btn_export_magisk_zip">Export Magisk Module .zip</string>
+    <string name="btn_flash_root_shell">Flash Directly via Root Shell</string>
+    <string name="toast_exported_downloads">Exported to Downloads</string>
+
+    <!-- Hearing Test Wizard -->
+    <string name="hearing_test_title">Hearing Threshold Test</string>
+    <string name="hearing_tone_level">Tone Level</string>
+
+    <!-- Sessions Extra -->
+    <string name="sessions_auto_profile_tag">Auto-Profile</string>
+
+    <!-- Settings Extra & Toasts -->
+    <string name="btn_grant_dump_su">Grant DUMP via SU</string>
+    <string name="btn_open_sound_settings">Open System Sound Settings</string>
+    <string name="toast_could_not_open_sound_settings">Could not open sound settings</string>
+    <string name="mins_format">%1$dm</string>
+    <string name="backup_suite_title">Backup &amp; Restore Suite</string>
+    <string name="backup_suite_desc">Export/import all custom presets, device profiles, &amp; app rules</string>
+    <string name="btn_export_backup">Export Backup</string>
+    <string name="btn_restore_backup">Restore</string>
+    <string name="app_version_format">Timbre DSP v%1$s</string>
+    <string name="toast_backup_exported">Configuration backup exported!</string>
+    <string name="toast_backup_export_failed">Export failed</string>
+    <string name="toast_backup_restored">Configuration restored successfully!</string>
+    <string name="toast_backup_invalid">Invalid backup file</string>
+
+    <!-- Effects Screen Toasts -->
+    <string name="toast_loaded_ir">Loaded impulse response: %1$s</string>
+    <string name="toast_failed_ir">Failed to parse .wav / .irs file</string>
+
+    <!-- Update Dialog Extra -->
+    <string name="update_new_version_format">New Version: v%1$s</string>
+    <string name="update_current_version_format">Current: v%1$s</string>
+    <string name="update_release_notes_label">Release Notes:</string>
+    <string name="update_default_notes">Performance improvements and bug fixes.</string>
 </resources>
