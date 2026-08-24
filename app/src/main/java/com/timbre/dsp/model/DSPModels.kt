@@ -69,7 +69,8 @@ data class AutoEqProfile(
     val brand: String,
     val source: String,
     val bands: List<EQBand>,
-    val preampGain: Float = -4.5f
+    val preampGain: Float = -4.5f,
+    val category: String = "Over-Ear"
 )
 
 data class AudioSessionInfo(
