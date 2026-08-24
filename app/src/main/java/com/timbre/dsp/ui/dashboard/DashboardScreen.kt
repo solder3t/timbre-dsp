@@ -1,5 +1,6 @@
 package com.timbre.dsp.ui.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -11,29 +12,38 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BookmarkAdd
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.Headset
 import androidx.compose.material.icons.filled.ImportExport
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,11 +63,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.timbre.dsp.model.OutputDeviceType
 import com.timbre.dsp.RoutingStatus
 import com.timbre.dsp.model.AutoEqProfile
 import com.timbre.dsp.model.DSPSettings
@@ -248,42 +260,130 @@ fun DashboardScreen(
         // 2. Active Device Banner
         if (currentDevice != null) {
             item {
+                var showDeviceMenu by remember { mutableStateOf(false) }
+                val isBoundToCurrent = currentDevice.presetId == settings.currentPresetId && currentDevice.presetId.isNotBlank()
+                val boundPreset = presets.find { it.id == currentDevice.presetId }
+
                 GlassmorphicCard(
                     modifier = Modifier.fillMaxWidth(),
                     hazeState = hazeState,
-                    shape = RoundedCornerShape(12.dp),
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f)
+                    shape = RoundedCornerShape(16.dp),
+                    containerColor = if (boundPreset != null)
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f)
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (currentDevice.deviceType.name.contains("BLUETOOTH")) Icons.Default.Headphones else Icons.Default.Speaker,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(end = 10.dp)
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val icon = when (currentDevice.deviceType) {
+                                    OutputDeviceType.BLUETOOTH -> Icons.Default.Headphones
+                                    OutputDeviceType.USB -> Icons.Default.Usb
+                                    OutputDeviceType.WIRED -> Icons.Default.Headset
+                                    OutputDeviceType.SPEAKER -> Icons.Default.Speaker
+                                    else -> Icons.AutoMirrored.Filled.VolumeUp
+                                }
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
                             Column {
                                 Text(
                                     text = currentDevice.deviceName,
-                                    style = MaterialTheme.typography.labelLarge
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1
                                 )
+                                if (boundPreset != null) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(top = 2.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Auto-Preset: ${boundPreset.name}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                } else {
+                                    Text(
+                                        text = "${currentDevice.deviceType.displayName} • Auto-routing active",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Box {
+                            FilledTonalButton(
+                                onClick = { showDeviceMenu = true },
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isBoundToCurrent) Icons.Default.Check else Icons.Default.BookmarkBorder,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Auto-Profile: ${currentDevice.deviceType.name}",
+                                    text = if (isBoundToCurrent) "Linked" else "Link Preset",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = showDeviceMenu,
+                                onDismissRequest = { showDeviceMenu = false }
+                            ) {
+                                val currentPresetName = presets.find { it.id == settings.currentPresetId }?.name ?: "Current"
+                                DropdownMenuItem(
+                                    text = { Text("Link to $currentPresetName", fontWeight = FontWeight.SemiBold) },
+                                    leadingIcon = { Icon(Icons.Default.BookmarkAdd, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                                    onClick = {
+                                        onBindCurrentDevice()
+                                        showDeviceMenu = false
+                                    }
                                 )
                             }
                         }
-                        TextButton(onClick = onBindCurrentDevice) {
-                            Text("Remember", style = MaterialTheme.typography.labelSmall)
-                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(6.dp))
             }
         }
 

@@ -152,7 +152,7 @@ class DeviceProfileManager private constructor(private val context: Context) {
     }
 
     private fun resolveDeviceInfo(info: AudioDeviceInfo): Pair<OutputDeviceType, String> {
-        val name = if (info.productName.isNotBlank()) info.productName.toString() else "Audio Output"
+        val rawName = if (info.productName.isNotBlank()) info.productName.toString().trim() else ""
         val type = when (info.type) {
             AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_SCO, 26, 27 -> OutputDeviceType.BLUETOOTH
             AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_HEADSET -> OutputDeviceType.USB
@@ -160,6 +160,35 @@ class DeviceProfileManager private constructor(private val context: Context) {
             AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> OutputDeviceType.SPEAKER
             else -> OutputDeviceType.OTHER
         }
+
+        val name = when (type) {
+            OutputDeviceType.SPEAKER -> {
+                if (rawName.isBlank() || rawName.equals(android.os.Build.MODEL, ignoreCase = true) || rawName.equals(android.os.Build.PRODUCT, ignoreCase = true) || rawName.startsWith("SM-", ignoreCase = true)) {
+                    "Built-in Speaker (${android.os.Build.MODEL})"
+                } else {
+                    rawName
+                }
+            }
+            OutputDeviceType.WIRED -> {
+                if (rawName.isBlank() || rawName.equals(android.os.Build.MODEL, ignoreCase = true) || rawName.startsWith("SM-", ignoreCase = true)) {
+                    "Wired Headphones"
+                } else {
+                    rawName
+                }
+            }
+            OutputDeviceType.USB -> {
+                if (rawName.isBlank() || rawName.equals(android.os.Build.MODEL, ignoreCase = true)) {
+                    "USB Audio DAC"
+                } else {
+                    rawName
+                }
+            }
+            OutputDeviceType.BLUETOOTH -> {
+                if (rawName.isBlank()) "Bluetooth Audio" else rawName
+            }
+            OutputDeviceType.OTHER -> if (rawName.isBlank()) "External Output" else rawName
+        }
+
         return Pair(type, name)
     }
 

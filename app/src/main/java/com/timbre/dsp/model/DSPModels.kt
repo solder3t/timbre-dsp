@@ -25,12 +25,12 @@ enum class FilterType {
     HIGH_SHELF
 }
 
-enum class OutputDeviceType {
-    SPEAKER,
-    WIRED,
-    BLUETOOTH,
-    USB,
-    OTHER
+enum class OutputDeviceType(val displayName: String) {
+    SPEAKER("Built-in Speaker"),
+    WIRED("Wired Headphones"),
+    BLUETOOTH("Bluetooth Audio"),
+    USB("USB Audio DAC"),
+    OTHER("External Audio")
 }
 
 enum class TargetCurve(val displayName: String) {
