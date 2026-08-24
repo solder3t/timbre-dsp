@@ -26,6 +26,11 @@ on:
         required: false
         default: false
         type: boolean
+      release_notes:
+        description: 'Custom Release Notes / Changelog (Optional Markdown)'
+        required: false
+        default: ''
+        type: string
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -127,6 +132,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Download release APK
         if: inputs.artifact_type == 'apk' || inputs.artifact_type == 'both'
@@ -166,13 +173,71 @@ jobs:
             done
           fi
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts)
+          
+          # 1. Check if user provided manual release notes via workflow dispatch input
+          MANUAL_NOTES="${{ inputs.release_notes }}"
+          if [ -n "$MANUAL_NOTES" ]; then
+            echo "Using release notes provided via workflow input."
+            {
+              echo "body<<EOF"
+              echo "$MANUAL_NOTES"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # 2. Check if CHANGELOG.md has an entry for this version
+          if [ -f "CHANGELOG.md" ]; then
+            EXTRACTED=$(sed -n "/## \[$VERSION_NAME\]/,/## \[/p" CHANGELOG.md | sed '$d' | sed '1d' | sed '/^[[:space:]]*$/d')
+            if [ -z "$EXTRACTED" ]; then
+              EXTRACTED=$(sed -n "/## v$VERSION_NAME/,/## v/p" CHANGELOG.md | sed '$d' | sed '1d' | sed '/^[[:space:]]*$/d')
+            fi
+            if [ -z "$EXTRACTED" ]; then
+              EXTRACTED=$(sed -n "/## $VERSION_NAME/,/## /p" CHANGELOG.md | sed '$d' | sed '1d' | sed '/^[[:space:]]*$/d')
+            fi
+            if [ -n "$EXTRACTED" ]; then
+              echo "Extracted changelog from CHANGELOG.md for v$VERSION_NAME."
+              {
+                echo "body<<EOF"
+                echo "$EXTRACTED"
+                echo "EOF"
+              } >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          fi
+
+          # 3. Fallback: Automatically extract clean commit history since previous release tag
+          echo "Extracting changelog from git commits..."
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            COMMITS=$(git log "$PREV_TAG..HEAD" --pretty=format:"• %s" --no-merges | grep -v "Merge branch" | grep -v "chore(release)" || true)
+          else
+            COMMITS=$(git log -n 15 --pretty=format:"• %s" --no-merges | grep -v "Merge branch" | grep -v "chore(release)" || true)
+          fi
+
+          if [ -z "$COMMITS" ]; then
+            COMMITS="• General stability improvements and DSP audio engine optimizations."
+          fi
+
+          {
+            echo "body<<EOF"
+            echo "### What's New in v${VERSION_NAME}"
+            echo ""
+            echo "$COMMITS"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.name }}
+          body: ${{ steps.changelog.outputs.body }}
           draft: false
-          generate_release_notes: true
           files: |
             dist/apk/*.apk
             dist/aab/*.aab
