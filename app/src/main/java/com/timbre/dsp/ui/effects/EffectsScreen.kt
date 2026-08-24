@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -50,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.timbre.dsp.R
 import com.timbre.dsp.data.ImpulseResponseProfile
@@ -107,128 +111,360 @@ fun EffectsScreen(
         )
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter
     ) {
-        Text(
-            text = stringResource(R.string.effects_master_title),
-            style = MaterialTheme.typography.headlineSmall
-        )
-        Text(
-            text = stringResource(R.string.effects_master_active),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 1. Hearing Calibration Card
-        GlassmorphicCard(
-            modifier = Modifier.fillMaxWidth(),
-            hazeState = hazeState,
-            containerColor = if (settings.hearingAudiogram.isCalibrated)
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-            else
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        Column(
+            modifier = Modifier
+                .widthIn(max = 840.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Hearing, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.effects_section_hearing), style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            text = if (settings.hearingAudiogram.isCalibrated) stringResource(R.string.effects_calibrated_profile) else stringResource(R.string.effects_hearing_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+            Text(
+                text = stringResource(R.string.effects_master_title),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = stringResource(R.string.effects_master_active),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 1. Hearing Calibration Wizard Card
+            GlassmorphicCard(
+                modifier = Modifier.fillMaxWidth(),
+                hazeState = hazeState,
+                containerColor = if (settings.hearingAudiogram.isCalibrated)
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                else
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Hearing,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
                         )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Button(
-                    onClick = { showHearingWizard = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(if (settings.hearingAudiogram.isCalibrated) stringResource(R.string.effects_retake_hearing_test) else stringResource(R.string.effects_perform_hearing_test))
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 2. Convolution / Impulse Response (.wav / .irs) Card (Option C)
-        GlassmorphicCard(
-            modifier = Modifier.fillMaxWidth(),
-            hazeState = hazeState,
-            containerColor = if (settings.convolutionEnabled)
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-            else
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.SurroundSound, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(stringResource(R.string.effects_section_convolution), style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                stringResource(R.string.effects_convolution_desc),
+                                stringResource(R.string.effects_section_hearing),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = if (settings.hearingAudiogram.isCalibrated)
+                                    stringResource(R.string.effects_calibrated_profile)
+                                else
+                                    stringResource(R.string.effects_hearing_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-                    Switch(
-                        checked = settings.convolutionEnabled,
-                        onCheckedChange = { onConvolutionChange(it, settings.activeConvolutionId, settings.convolutionWetDry) }
-                    )
-                }
-
-                if (settings.convolutionEnabled) {
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    val currentIRName = irProfiles.find { it.id == settings.activeConvolutionId }?.name ?: "Warm Studio Room"
-
-                    Text(stringResource(R.string.effects_active_ir), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    ExposedDropdownMenuBox(
-                        expanded = irDropdownExpanded,
-                        onExpandedChange = { irDropdownExpanded = !irDropdownExpanded },
+                    Button(
+                        onClick = { showHearingWizard = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        OutlinedTextField(
-                            value = currentIRName,
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = irDropdownExpanded) },
-                            modifier = Modifier.menuAnchor(androidx.compose.material3.ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        ExposedDropdownMenu(
-                            expanded = irDropdownExpanded,
-                            onDismissRequest = { irDropdownExpanded = false }
+                        Text(if (settings.hearingAudiogram.isCalibrated) stringResource(R.string.effects_retake_hearing_test) else stringResource(R.string.effects_perform_hearing_test))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 2. Convolution / Impulse Response (.wav / .irs) Card
+            GlassmorphicCard(
+                modifier = Modifier.fillMaxWidth(),
+                hazeState = hazeState,
+                containerColor = if (settings.convolutionEnabled)
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                else
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f).padding(end = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            irProfiles.forEach { profile ->
-                                DropdownMenuItem(
-                                    text = { Text("${profile.name} (${profile.category})") },
-                                    onClick = {
-                                        onConvolutionChange(true, profile.id, settings.convolutionWetDry)
-                                        irDropdownExpanded = false
-                                    }
+                            Icon(
+                                Icons.Default.SurroundSound,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    stringResource(R.string.effects_section_convolution),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    stringResource(R.string.effects_convolution_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                        }
+                        Switch(
+                            checked = settings.convolutionEnabled,
+                            onCheckedChange = { onConvolutionChange(it, settings.activeConvolutionId, settings.convolutionWetDry) }
+                        )
+                    }
+
+                    if (settings.convolutionEnabled) {
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        val currentIRName = irProfiles.find { it.id == settings.activeConvolutionId }?.name ?: "Warm Studio Room"
+
+                        Text(stringResource(R.string.effects_active_ir), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        ExposedDropdownMenuBox(
+                            expanded = irDropdownExpanded,
+                            onExpandedChange = { irDropdownExpanded = !irDropdownExpanded },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = currentIRName,
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = irDropdownExpanded) },
+                                modifier = Modifier.menuAnchor(androidx.compose.material3.ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = irDropdownExpanded,
+                                onDismissRequest = { irDropdownExpanded = false }
+                            ) {
+                                irProfiles.forEach { profile ->
+                                    DropdownMenuItem(
+                                        text = { Text(profile.name) },
+                                        onClick = {
+                                            onConvolutionChange(true, profile.id, settings.convolutionWetDry)
+                                            irDropdownExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(stringResource(R.string.effects_wet_dry_mix), style = MaterialTheme.typography.bodySmall)
+                            Text("${(settings.convolutionWetDry * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                        }
+                        Slider(
+                            value = settings.convolutionWetDry,
+                            onValueChange = { onConvolutionChange(true, settings.activeConvolutionId, it) },
+                            valueRange = 0f..1f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedButton(
+                            onClick = {
+                                irPickerLauncher.launch(arrayOf("audio/x-wav", "audio/wav", "application/octet-stream", "*/*"))
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.FileUpload, contentDescription = null)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(stringResource(R.string.effects_import_custom_ir))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 3. Preamp Gain & Auto-Preamp Headroom Protection
+            GlassmorphicCard(
+                modifier = Modifier.fillMaxWidth(),
+                hazeState = hazeState,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f).padding(end = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    stringResource(R.string.effects_section_dynamics),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    if (settings.autoPreampEnabled) stringResource(R.string.effects_auto_preamp_desc) else stringResource(R.string.effects_limiter_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Text(
+                            text = String.format(Locale.US, "%.1f dB", settings.preampGain),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+
+                    if (!settings.autoPreampEnabled) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Slider(
+                            value = settings.preampGain,
+                            onValueChange = onPreampGainChange,
+                            valueRange = -15f..15f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Auto-Preamp Headroom Switch
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f).padding(end = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Shield,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    stringResource(R.string.effects_auto_preamp_title),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    stringResource(R.string.effects_auto_preamp_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = settings.autoPreampEnabled,
+                            onCheckedChange = onAutoPreampChange
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Anti-Clipping Peak Limiter Switch
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f).padding(end = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Security,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    stringResource(R.string.effects_limiter_title),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    stringResource(R.string.effects_limiter_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = settings.limiterEnabled,
+                            onCheckedChange = onLimiterChange
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 4. Channel Balance & Mono Summing Card
+            GlassmorphicCard(
+                modifier = Modifier.fillMaxWidth(),
+                hazeState = hazeState,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Balance,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                stringResource(R.string.effects_balance_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                stringResource(R.string.effects_balance_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
 
@@ -238,390 +474,307 @@ fun EffectsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(stringResource(R.string.effects_wet_dry_mix), style = MaterialTheme.typography.bodySmall)
-                        Text("${(settings.convolutionWetDry * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            text = "${stringResource(R.string.effects_label_left)} ${if (settings.channelBalance < 0) String.format(Locale.US, "%.0f%%", -settings.channelBalance * 100) else ""}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = stringResource(R.string.effects_label_center),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = "${stringResource(R.string.effects_label_right)} ${if (settings.channelBalance > 0) String.format(Locale.US, "%.0f%%", settings.channelBalance * 100) else ""}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
+
                     Slider(
-                        value = settings.convolutionWetDry,
-                        onValueChange = { onConvolutionChange(true, settings.activeConvolutionId, it) },
-                        valueRange = 0f..1f,
+                        value = settings.channelBalance,
+                        onValueChange = onChannelBalanceChange,
+                        valueRange = -1f..1f,
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedButton(
-                        onClick = {
-                            irPickerLauncher.launch(arrayOf("audio/x-wav", "audio/wav", "application/octet-stream", "*/*"))
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.FileUpload, contentDescription = null)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.effects_import_custom_ir))
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 3. Preamp Gain & Auto-Preamp Headroom Protection (Option A)
-        GlassmorphicCard(
-            modifier = Modifier.fillMaxWidth(),
-            hazeState = hazeState,
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(stringResource(R.string.effects_section_dynamics), style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                if (settings.autoPreampEnabled) stringResource(R.string.effects_auto_preamp_desc) else stringResource(R.string.effects_limiter_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    Text(
-                        text = String.format(Locale.US, "%.1f dB", settings.preampGain),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                if (!settings.autoPreampEnabled) {
-                    Slider(
-                        value = settings.preampGain,
-                        onValueChange = onPreampGainChange,
-                        valueRange = -15f..15f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Auto-Preamp Headroom Switch
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Shield, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(stringResource(R.string.effects_auto_preamp_title), style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                stringResource(R.string.effects_auto_preamp_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    Switch(
-                        checked = settings.autoPreampEnabled,
-                        onCheckedChange = onAutoPreampChange
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Anti-Clipping Peak Limiter Switch
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(stringResource(R.string.effects_limiter_title), style = MaterialTheme.typography.bodyMedium)
-                            Text(
-                                stringResource(R.string.effects_limiter_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    Switch(
-                        checked = settings.limiterEnabled,
-                        onCheckedChange = onLimiterChange
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 4. Channel Balance & Mono Summing Card
-        GlassmorphicCard(
-            modifier = Modifier.fillMaxWidth(),
-            hazeState = hazeState,
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Balance, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(stringResource(R.string.effects_balance_title), style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            stringResource(R.string.effects_balance_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("${stringResource(R.string.effects_label_left)} ${if (settings.channelBalance < 0) String.format(Locale.US, "%.0f%%", -settings.channelBalance * 100) else ""}", style = MaterialTheme.typography.bodySmall)
-                    Text(stringResource(R.string.effects_label_center), style = MaterialTheme.typography.bodySmall)
-                    Text("${stringResource(R.string.effects_label_right)} ${if (settings.channelBalance > 0) String.format(Locale.US, "%.0f%%", settings.channelBalance * 100) else ""}", style = MaterialTheme.typography.bodySmall)
-                }
-
-                Slider(
-                    value = settings.channelBalance,
-                    onValueChange = onChannelBalanceChange,
-                    valueRange = -1f..1f,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(stringResource(R.string.effects_force_mono_title), style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            stringResource(R.string.effects_force_mono_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(
-                        checked = settings.isMono,
-                        onCheckedChange = onMonoChange
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 5. Bass Boost Card
-        GlassmorphicCard(
-            modifier = Modifier.fillMaxWidth(),
-            hazeState = hazeState,
-            containerColor = if (settings.bassBoostEnabled)
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-            else
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Speaker, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(stringResource(R.string.effects_bass_boost_title), style = MaterialTheme.typography.titleMedium)
-                            Text(
-                                stringResource(R.string.effects_bass_boost_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    Switch(
-                        checked = settings.bassBoostEnabled,
-                        onCheckedChange = { onBassBoostChange(it, settings.bassBoostGain, settings.bassBoostCutoffFreq) }
-                    )
-                }
-
-                if (settings.bassBoostEnabled) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(stringResource(R.string.effects_strength), style = MaterialTheme.typography.bodySmall)
-                        Text(String.format(Locale.US, "+%.1f dB", settings.bassBoostGain), style = MaterialTheme.typography.bodySmall)
-                    }
-                    Slider(
-                        value = settings.bassBoostGain,
-                        onValueChange = { onBassBoostChange(true, it, settings.bassBoostCutoffFreq) },
-                        valueRange = 0f..15f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(stringResource(R.string.effects_cutoff_frequency), style = MaterialTheme.typography.bodySmall)
-                        Text(String.format(Locale.US, "%.0f Hz", settings.bassBoostCutoffFreq), style = MaterialTheme.typography.bodySmall)
-                    }
-                    Slider(
-                        value = settings.bassBoostCutoffFreq,
-                        onValueChange = { onBassBoostChange(true, settings.bassBoostGain, it) },
-                        valueRange = 40f..200f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 6. Binaural Crossfeed & Spatializer
-        GlassmorphicCard(
-            modifier = Modifier.fillMaxWidth(),
-            hazeState = hazeState,
-            containerColor = if (settings.crossfeedEnabled || settings.virtualizerEnabled)
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-            else
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Headphones, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(stringResource(R.string.effects_crossfeed_title), style = MaterialTheme.typography.titleMedium)
+                        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                             Text(
-                                stringResource(R.string.effects_crossfeed_desc),
+                                stringResource(R.string.effects_force_mono_title),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                stringResource(R.string.effects_force_mono_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                    }
-                    Switch(
-                        checked = settings.crossfeedEnabled,
-                        onCheckedChange = { onCrossfeedChange(it, settings.crossfeedStrength) }
-                    )
-                }
-
-                if (settings.crossfeedEnabled) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(stringResource(R.string.effects_strength), style = MaterialTheme.typography.bodySmall)
-                        Text("${(settings.crossfeedStrength * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
-                    }
-                    Slider(
-                        value = settings.crossfeedStrength,
-                        onValueChange = { onCrossfeedChange(true, it) },
-                        valueRange = 0f..1f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(stringResource(R.string.effects_virtualizer_title), style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            stringResource(R.string.effects_virtualizer_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Switch(
+                            checked = settings.isMono,
+                            onCheckedChange = onMonoChange
                         )
                     }
-                    Switch(
-                        checked = settings.virtualizerEnabled,
-                        onCheckedChange = { onVirtualizerChange(it, settings.virtualizerStrength) }
-                    )
-                }
-
-                if (settings.virtualizerEnabled) {
-                    Slider(
-                        value = settings.virtualizerStrength,
-                        onValueChange = { onVirtualizerChange(true, it) },
-                        valueRange = 0f..100f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        // 7. Treble Clarity & Harmonic Exciter
-        GlassmorphicCard(
-            modifier = Modifier.fillMaxWidth(),
-            hazeState = hazeState,
-            containerColor = if (settings.clarityEnabled)
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-            else
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.GraphicEq, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(stringResource(R.string.effects_clarity_title), style = MaterialTheme.typography.titleMedium)
+            // 5. Bass Boost Card
+            GlassmorphicCard(
+                modifier = Modifier.fillMaxWidth(),
+                hazeState = hazeState,
+                containerColor = if (settings.bassBoostEnabled)
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                else
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f).padding(end = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Speaker,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    stringResource(R.string.effects_bass_boost_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    stringResource(R.string.effects_bass_boost_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = settings.bassBoostEnabled,
+                            onCheckedChange = { onBassBoostChange(it, settings.bassBoostGain, settings.bassBoostCutoffFreq) }
+                        )
+                    }
+
+                    if (settings.bassBoostEnabled) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(stringResource(R.string.effects_strength), style = MaterialTheme.typography.bodySmall)
                             Text(
-                                stringResource(R.string.effects_clarity_desc),
+                                String.format(Locale.US, "+%.1f dB", settings.bassBoostGain),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Slider(
+                            value = settings.bassBoostGain,
+                            onValueChange = { onBassBoostChange(true, it, settings.bassBoostCutoffFreq) },
+                            valueRange = 0f..15f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(stringResource(R.string.effects_cutoff_frequency), style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                String.format(Locale.US, "%.0f Hz", settings.bassBoostCutoffFreq),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Slider(
+                            value = settings.bassBoostCutoffFreq,
+                            onValueChange = { onBassBoostChange(true, settings.bassBoostGain, it) },
+                            valueRange = 40f..200f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 6. Binaural Crossfeed & Spatializer
+            GlassmorphicCard(
+                modifier = Modifier.fillMaxWidth(),
+                hazeState = hazeState,
+                containerColor = if (settings.crossfeedEnabled || settings.virtualizerEnabled)
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                else
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f).padding(end = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Headphones,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    stringResource(R.string.effects_crossfeed_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    stringResource(R.string.effects_crossfeed_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = settings.crossfeedEnabled,
+                            onCheckedChange = { onCrossfeedChange(it, settings.crossfeedStrength) }
+                        )
+                    }
+
+                    if (settings.crossfeedEnabled) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(stringResource(R.string.effects_strength), style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                "${(settings.crossfeedStrength * 100).toInt()}%",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Slider(
+                            value = settings.crossfeedStrength,
+                            onValueChange = { onCrossfeedChange(true, it) },
+                            valueRange = 0f..1f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                            Text(
+                                stringResource(R.string.effects_virtualizer_title),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                stringResource(R.string.effects_virtualizer_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                        Switch(
+                            checked = settings.virtualizerEnabled,
+                            onCheckedChange = { onVirtualizerChange(it, settings.virtualizerStrength) }
+                        )
                     }
-                    Switch(
-                        checked = settings.clarityEnabled,
-                        onCheckedChange = { onClarityChange(it, settings.clarityGain) }
-                    )
-                }
 
-                if (settings.clarityEnabled) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Slider(
-                        value = settings.clarityGain,
-                        onValueChange = { onClarityChange(true, it) },
-                        valueRange = 0f..10f,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    if (settings.virtualizerEnabled) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Slider(
+                            value = settings.virtualizerStrength,
+                            onValueChange = { onVirtualizerChange(true, it) },
+                            valueRange = 0f..100f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 7. Treble Clarity & Harmonic Exciter
+            GlassmorphicCard(
+                modifier = Modifier.fillMaxWidth(),
+                hazeState = hazeState,
+                containerColor = if (settings.clarityEnabled)
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                else
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f).padding(end = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.GraphicEq,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    stringResource(R.string.effects_clarity_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    stringResource(R.string.effects_clarity_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Switch(
+                            checked = settings.clarityEnabled,
+                            onCheckedChange = { onClarityChange(it, settings.clarityGain) }
+                        )
+                    }
+
+                    if (settings.clarityEnabled) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Slider(
+                            value = settings.clarityGain,
+                            onValueChange = { onClarityChange(true, it) },
+                            valueRange = 0f..10f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }

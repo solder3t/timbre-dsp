@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -108,76 +109,83 @@ fun SettingsScreen(
         currentSubScreen = SettingsSubScreen.MAIN
     }
 
-    AnimatedContent(
-        targetState = currentSubScreen,
-        transitionSpec = {
-            if (targetState == SettingsSubScreen.MAIN) {
-                (slideInHorizontally { -it } + fadeIn()) togetherWith (slideOutHorizontally { it } + fadeOut())
-            } else {
-                (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it } + fadeOut())
-            }
-        },
-        label = "settings_subscreen_nav"
-    ) { screen ->
-        when (screen) {
-            SettingsSubScreen.MAIN -> {
-                SettingsOverviewScreen(
-                    themeSettings = themeSettings,
-                    permissionStatus = permissionStatus,
-                    onNavigate = { currentSubScreen = it },
-                    hazeState = hazeState
-                )
-            }
-            SettingsSubScreen.APPEARANCE -> {
-                AppearanceSettingsPage(
-                    themeSettings = themeSettings,
-                    onSetThemeMode = onSetThemeMode,
-                    onSetDynamicColor = onSetDynamicColor,
-                    onSetSeedColor = onSetSeedColor,
-                    onSetFrostedGlass = onSetFrostedGlass,
-                    onBack = { currentSubScreen = SettingsSubScreen.MAIN },
-                    hazeState = hazeState
-                )
-            }
-            SettingsSubScreen.PERMISSIONS -> {
-                AudioSetupSettingsPage(
-                    permissionStatus = permissionStatus,
-                    onRequestShizuku = onRequestShizuku,
-                    onGrantDumpShizuku = onGrantDumpShizuku,
-                    onGrantDumpRoot = onGrantDumpRoot,
-                    onOpenNotificationSettings = onOpenNotificationSettings,
-                    onRequestBatteryOptimization = onRequestBatteryOptimization,
-                    onBack = { currentSubScreen = SettingsSubScreen.MAIN },
-                    hazeState = hazeState
-                )
-            }
-            SettingsSubScreen.DSP_ENGINE -> {
-                DspEngineSettingsPage(
-                    settings = settings,
-                    onSetRoutingMode = onSetRoutingMode,
-                    onToggleLimiter = onToggleLimiter,
-                    onToggleVisualizer = onToggleVisualizer,
-                    onBack = { currentSubScreen = SettingsSubScreen.MAIN },
-                    hazeState = hazeState
-                )
-            }
-            SettingsSubScreen.BACKUP -> {
-                BackupSettingsPage(
-                    isSleepTimerRunning = isSleepTimerRunning,
-                    sleepTimerSeconds = sleepTimerSeconds,
-                    onStartSleepTimer = onStartSleepTimer,
-                    onCancelSleepTimer = onCancelSleepTimer,
-                    onExportBackup = onExportBackup,
-                    onImportBackup = onImportBackup,
-                    onBack = { currentSubScreen = SettingsSubScreen.MAIN },
-                    hazeState = hazeState
-                )
-            }
-            SettingsSubScreen.ABOUT -> {
-                AboutSettingsPage(
-                    onBack = { currentSubScreen = SettingsSubScreen.MAIN },
-                    hazeState = hazeState
-                )
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Box(modifier = Modifier.widthIn(max = 840.dp).fillMaxSize()) {
+            AnimatedContent(
+                targetState = currentSubScreen,
+                transitionSpec = {
+                    if (targetState == SettingsSubScreen.MAIN) {
+                        (slideInHorizontally { -it } + fadeIn()) togetherWith (slideOutHorizontally { it } + fadeOut())
+                    } else {
+                        (slideInHorizontally { it } + fadeIn()) togetherWith (slideOutHorizontally { -it } + fadeOut())
+                    }
+                },
+                label = "settings_subscreen_nav"
+            ) { screen ->
+                when (screen) {
+                    SettingsSubScreen.MAIN -> {
+                        SettingsOverviewScreen(
+                            themeSettings = themeSettings,
+                            permissionStatus = permissionStatus,
+                            onNavigate = { currentSubScreen = it },
+                            hazeState = hazeState
+                        )
+                    }
+                    SettingsSubScreen.APPEARANCE -> {
+                        AppearanceSettingsPage(
+                            themeSettings = themeSettings,
+                            onSetThemeMode = onSetThemeMode,
+                            onSetDynamicColor = onSetDynamicColor,
+                            onSetSeedColor = onSetSeedColor,
+                            onSetFrostedGlass = onSetFrostedGlass,
+                            onBack = { currentSubScreen = SettingsSubScreen.MAIN },
+                            hazeState = hazeState
+                        )
+                    }
+                    SettingsSubScreen.PERMISSIONS -> {
+                        AudioSetupSettingsPage(
+                            permissionStatus = permissionStatus,
+                            onRequestShizuku = onRequestShizuku,
+                            onGrantDumpShizuku = onGrantDumpShizuku,
+                            onGrantDumpRoot = onGrantDumpRoot,
+                            onOpenNotificationSettings = onOpenNotificationSettings,
+                            onRequestBatteryOptimization = onRequestBatteryOptimization,
+                            onBack = { currentSubScreen = SettingsSubScreen.MAIN },
+                            hazeState = hazeState
+                        )
+                    }
+                    SettingsSubScreen.DSP_ENGINE -> {
+                        DspEngineSettingsPage(
+                            settings = settings,
+                            onSetRoutingMode = onSetRoutingMode,
+                            onToggleLimiter = onToggleLimiter,
+                            onToggleVisualizer = onToggleVisualizer,
+                            onBack = { currentSubScreen = SettingsSubScreen.MAIN },
+                            hazeState = hazeState
+                        )
+                    }
+                    SettingsSubScreen.BACKUP -> {
+                        BackupSettingsPage(
+                            isSleepTimerRunning = isSleepTimerRunning,
+                            sleepTimerSeconds = sleepTimerSeconds,
+                            onStartSleepTimer = onStartSleepTimer,
+                            onCancelSleepTimer = onCancelSleepTimer,
+                            onExportBackup = onExportBackup,
+                            onImportBackup = onImportBackup,
+                            onBack = { currentSubScreen = SettingsSubScreen.MAIN },
+                            hazeState = hazeState
+                        )
+                    }
+                    SettingsSubScreen.ABOUT -> {
+                        AboutSettingsPage(
+                            onBack = { currentSubScreen = SettingsSubScreen.MAIN },
+                            hazeState = hazeState
+                        )
+                    }
+                }
             }
         }
     }

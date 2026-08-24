@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,6 +34,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -63,13 +63,10 @@ import com.timbre.dsp.ui.effects.EffectsScreen
 import com.timbre.dsp.ui.sessions.SessionsScreen
 import com.timbre.dsp.ui.settings.SettingsScreen
 import com.timbre.dsp.ui.utils.WindowWidthClass
-import com.timbre.dsp.ui.utils.adaptiveContentPadding
 import com.timbre.dsp.ui.utils.rememberWindowWidthClass
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
 
 data class NavTabItem(
     val title: String,
@@ -116,11 +113,11 @@ fun MainScreen(
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
 
     @Composable
-    fun ScreenContent() {
+    fun TabContent() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .adaptiveContentPadding()
+                .hazeSource(state = hazeState)
         ) {
             when (selectedTab) {
                 0 -> DashboardScreen(
@@ -208,89 +205,34 @@ fun MainScreen(
     }
 
     if (isCompact) {
-        // COMPACT (Phone Portrait): Bottom Navigation Bar
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .hazeSource(state = hazeState)
-            ) {
-                ScreenContent()
-            }
-
-            // Floating glassmorphic bottom bar over the content
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .hazeEffect(
-                        state = hazeState,
-                        style = HazeMaterials.thin(MaterialTheme.colorScheme.surface.copy(alpha = 0.70f))
-                    )
-                    .navigationBarsPadding()
-            ) {
-                // Shimmer top divider line
-                Box(
+        // COMPACT: Scaffold with Bottom Navigation Bar
+        Scaffold(
+            bottomBar = {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = onSurface,
+                    tonalElevation = 2.dp,
                     modifier = Modifier
-                        .matchParentSize()
+                        .fillMaxWidth()
                         .drawBehind {
                             drawLine(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        onSurface.copy(alpha = 0.12f),
-                                        primary.copy(alpha = 0.35f),
-                                        onSurface.copy(alpha = 0.12f),
-                                        Color.Transparent
-                                    )
-                                ),
+                                color = onSurface.copy(alpha = 0.08f),
                                 start = Offset(0f, 0f),
                                 end = Offset(size.width, 0f),
                                 strokeWidth = 1.dp.toPx()
                             )
                         }
-                )
-
-                NavigationBar(
-                    containerColor = Color.Transparent,
-                    contentColor = onSurface,
-                    tonalElevation = 0.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(72.dp)
                 ) {
                     navTabs.forEachIndexed { index, tab ->
                         val isSelected = selectedTab == index
 
                         val scale by animateFloatAsState(
-                            targetValue = if (isSelected) 1.18f else 1.0f,
+                            targetValue = if (isSelected) 1.15f else 1.0f,
                             animationSpec = spring(
                                 dampingRatio = Spring.DampingRatioMediumBouncy,
                                 stiffness = Spring.StiffnessMedium
                             ),
                             label = "tab_icon_scale"
-                        )
-
-                        val pillColor by animateColorAsState(
-                            targetValue = if (isSelected) primaryContainer.copy(alpha = 0.90f) else Color.Transparent,
-                            animationSpec = tween(durationMillis = 200),
-                            label = "tab_pill_color"
-                        )
-
-                        val iconTint by animateColorAsState(
-                            targetValue = if (isSelected) onPrimaryContainer else onSurfaceVariant.copy(alpha = 0.70f),
-                            animationSpec = tween(durationMillis = 200),
-                            label = "tab_icon_tint"
-                        )
-
-                        val labelColor by animateColorAsState(
-                            targetValue = if (isSelected) primary else onSurfaceVariant.copy(alpha = 0.65f),
-                            animationSpec = tween(durationMillis = 200),
-                            label = "tab_label_color"
                         )
 
                         NavigationBarItem(
@@ -302,32 +244,22 @@ fun MainScreen(
                                 }
                             },
                             icon = {
-                                Box(
+                                Icon(
+                                    imageVector = tab.icon,
+                                    contentDescription = tab.title,
                                     modifier = Modifier
-                                        .size(width = 56.dp, height = 30.dp)
-                                        .clip(RoundedCornerShape(15.dp))
-                                        .background(pillColor),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = tab.icon,
-                                        contentDescription = tab.title,
-                                        tint = iconTint,
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .graphicsLayer {
-                                                scaleX = scale
-                                                scaleY = scale
-                                            }
-                                    )
-                                }
+                                        .size(24.dp)
+                                        .graphicsLayer {
+                                            scaleX = scale
+                                            scaleY = scale
+                                        }
+                                )
                             },
                             label = {
                                 Text(
                                     text = tab.title,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = labelColor,
                                     maxLines = 1
                                 )
                             },
@@ -335,62 +267,70 @@ fun MainScreen(
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = onPrimaryContainer,
                                 selectedTextColor = primary,
-                                indicatorColor = Color.Transparent,
+                                indicatorColor = primaryContainer,
                                 unselectedIconColor = onSurfaceVariant.copy(alpha = 0.70f),
                                 unselectedTextColor = onSurfaceVariant.copy(alpha = 0.65f)
                             )
                         )
                     }
                 }
+            },
+            modifier = modifier.fillMaxSize()
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .statusBarsPadding()
+            ) {
+                TabContent()
             }
         }
     } else {
-        // MEDIUM / EXPANDED (Foldables, Tablets, Landscape): Side Navigation Rail
+        // MEDIUM / EXPANDED (Tablets, Foldables, Landscape): Side Navigation Rail
         Row(
             modifier = modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
-            // Glassmorphic Navigation Rail
             NavigationRail(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = onSurface,
                 header = {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(vertical = 12.dp)
+                        modifier = Modifier.padding(vertical = 16.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(44.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
+                                .background(
+                                    Brush.radialGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        )
+                                    )
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 Icons.Default.GraphicEq,
                                 contentDescription = "Timbre DSP",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(26.dp)
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(28.dp)
                             )
                         }
                     }
                 },
                 modifier = Modifier
-                    .width(88.dp)
+                    .width(96.dp)
                     .fillMaxHeight()
                     .drawBehind {
                         drawLine(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    onSurface.copy(alpha = 0.12f),
-                                    primary.copy(alpha = 0.30f),
-                                    onSurface.copy(alpha = 0.12f),
-                                    Color.Transparent
-                                )
-                            ),
+                            color = onSurface.copy(alpha = 0.08f),
                             start = Offset(size.width, 0f),
                             end = Offset(size.width, size.height),
                             strokeWidth = 1.dp.toPx()
@@ -410,18 +350,6 @@ fun MainScreen(
                         label = "rail_tab_icon_scale"
                     )
 
-                    val pillColor by animateColorAsState(
-                        targetValue = if (isSelected) primaryContainer.copy(alpha = 0.90f) else Color.Transparent,
-                        animationSpec = tween(durationMillis = 200),
-                        label = "rail_tab_pill_color"
-                    )
-
-                    val iconTint by animateColorAsState(
-                        targetValue = if (isSelected) onPrimaryContainer else onSurfaceVariant.copy(alpha = 0.70f),
-                        animationSpec = tween(durationMillis = 200),
-                        label = "rail_tab_icon_tint"
-                    )
-
                     NavigationRailItem(
                         selected = isSelected,
                         onClick = {
@@ -431,32 +359,22 @@ fun MainScreen(
                             }
                         },
                         icon = {
-                            Box(
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = tab.title,
                                 modifier = Modifier
-                                    .size(width = 56.dp, height = 32.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(pillColor),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = tab.icon,
-                                    contentDescription = tab.title,
-                                    tint = iconTint,
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .graphicsLayer {
-                                            scaleX = scale
-                                            scaleY = scale
-                                        }
-                                )
-                            }
+                                    .size(24.dp)
+                                    .graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                    }
+                            )
                         },
                         label = {
                             Text(
                                 text = tab.title,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) primary else onSurfaceVariant.copy(alpha = 0.70f),
                                 maxLines = 1
                             )
                         },
@@ -464,7 +382,7 @@ fun MainScreen(
                         colors = NavigationRailItemDefaults.colors(
                             selectedIconColor = onPrimaryContainer,
                             selectedTextColor = primary,
-                            indicatorColor = Color.Transparent,
+                            indicatorColor = primaryContainer,
                             unselectedIconColor = onSurfaceVariant.copy(alpha = 0.70f),
                             unselectedTextColor = onSurfaceVariant.copy(alpha = 0.65f)
                         )
@@ -478,9 +396,8 @@ fun MainScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .hazeSource(state = hazeState)
             ) {
-                ScreenContent()
+                TabContent()
             }
         }
     }
