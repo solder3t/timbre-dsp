@@ -273,10 +273,34 @@
     <string name="btn_download_update">Download APK</string>
     <string name="btn_view_github">View on GitHub</string>
     <string name="about_app_desc">High-Fidelity Audio DSP &amp; Parametric Equalizer for Android</string>
+    <string name="about_tagline">Audiophile-grade system equalizer &amp; real-time DSP pipeline</string>
     <string name="about_github_title">Source Code &amp; Releases</string>
     <string name="about_github_desc">github.com/solder3t/timbre-dsp</string>
     <string name="about_issues_title">Report an Issue</string>
     <string name="about_issues_desc">Submit bugs, feature requests, or device measurements</string>
+    <string name="about_section_engine_specs">Engine Architecture</string>
+    <string name="about_engine_pipeline">64-Bit Float SIMD Audio Pipeline</string>
+    <string name="about_engine_pipeline_desc">Zero-latency biquad filtering with NEON/AVX acceleration</string>
+    <string name="about_engine_peq">Parametric &amp; Graphic EQ</string>
+    <string name="about_engine_peq_desc">10-band graphic &amp; multi-band parametric biquad filters</string>
+    <string name="about_engine_autoeq">AutoEq Calibration Database</string>
+    <string name="about_engine_autoeq_desc">Pre-calibrated profiles for headphones, IEMs &amp; speakers</string>
+    <string name="about_engine_convolution">FFT Convolution Engine</string>
+    <string name="about_engine_convolution_desc">True stereo room impulse responses (.wav/.irs) &amp; crossfeed</string>
+    <string name="about_section_credits">Contributors &amp; Credits</string>
+    <string name="about_author_title">Lead Developer</string>
+    <string name="about_author_name">solder3t</string>
+    <string name="about_author_desc">Creator and maintainer of Timbre DSP</string>
+    <string name="about_special_thanks">Special Thanks &amp; Open Source</string>
+    <string name="about_thanks_autoeq">AutoEq (Jaakko Pasanen)</string>
+    <string name="about_thanks_autoeq_desc">Headphone &amp; earphone acoustic measurement database</string>
+    <string name="about_thanks_shizuku">Shizuku (RikkaApps)</string>
+    <string name="about_thanks_shizuku_desc">Elevated binder bridge for non-root audio hook</string>
+    <string name="about_thanks_haze">Haze (Chris Banes)</string>
+    <string name="about_thanks_haze_desc">Frosted glass backdrop blur for Jetpack Compose</string>
+    <string name="about_license_title">Open Source License</string>
+    <string name="about_license_desc">GNU General Public License v3.0 • Free &amp; Open Source</string>
+    <string name="about_copyright">© 2026 Timbre DSP • Crafted for Audiophiles</string>
 
     <!-- Visualizer & EQ Graph -->
     <string name="visualizer_current_eq">Current EQ</string>
