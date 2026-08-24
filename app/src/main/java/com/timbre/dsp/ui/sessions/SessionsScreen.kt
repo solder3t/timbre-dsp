@@ -26,8 +26,6 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -53,6 +51,8 @@ import com.timbre.dsp.model.AppProfile
 import com.timbre.dsp.model.AudioSessionInfo
 import com.timbre.dsp.model.EQPreset
 import com.timbre.dsp.ui.components.AddAppProfileDialog
+import com.timbre.dsp.ui.components.GlassmorphicCard
+import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -71,6 +71,7 @@ fun SessionsScreen(
     onToggleAppProfile: (packageName: String, isEnabled: Boolean) -> Unit,
     onUpdateAppProfile: (packageName: String, presetId: String, isEnabled: Boolean) -> Unit,
     onRemoveAppProfile: (packageName: String) -> Unit,
+    hazeState: HazeState? = null,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
@@ -132,12 +133,10 @@ fun SessionsScreen(
 
         // 1. Built-in In-App Test Sound Generator Card
         item {
-            Card(
+            GlassmorphicCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                )
+                hazeState = hazeState,
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -247,10 +246,11 @@ fun SessionsScreen(
 
         if (activeSessions.isEmpty()) {
             item {
-                Surface(
+                GlassmorphicCard(
                     modifier = Modifier.fillMaxWidth(),
+                    hazeState = hazeState,
                     shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth().padding(24.dp),
@@ -285,6 +285,7 @@ fun SessionsScreen(
                     session = primarySession,
                     sessionCount = sessionsForApp.size,
                     presets = presets,
+                    hazeState = hazeState,
                     onBindPreset = { presetId ->
                         onBindAppPreset(primarySession.packageName, primarySession.appName, presetId)
                     }
@@ -324,6 +325,7 @@ fun SessionsScreen(
             ConfiguredAppProfileCard(
                 profile = profile,
                 presets = presets,
+                hazeState = hazeState,
                 onToggleEnabled = { onToggleAppProfile(profile.packageName, it) },
                 onSelectPreset = { onUpdateAppProfile(profile.packageName, it, profile.isEnabled) },
                 onDelete = { onRemoveAppProfile(profile.packageName) }
@@ -340,6 +342,7 @@ fun SessionsScreen(
 private fun ConfiguredAppProfileCard(
     profile: AppProfile,
     presets: List<EQPreset>,
+    hazeState: HazeState? = null,
     onToggleEnabled: (Boolean) -> Unit,
     onSelectPreset: (String) -> Unit,
     onDelete: () -> Unit
@@ -349,15 +352,14 @@ private fun ConfiguredAppProfileCard(
         presets.find { it.id == profile.presetId }?.name ?: profile.presetId.replace("_", " ").replaceFirstChar { it.titlecase(Locale.ROOT) }
     }
 
-    Card(
+    GlassmorphicCard(
         modifier = Modifier.fillMaxWidth(),
+        hazeState = hazeState,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (profile.isEnabled)
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            else
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-        )
+        containerColor = if (profile.isEnabled)
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        else
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -428,16 +430,16 @@ private fun SessionItemCard(
     session: AudioSessionInfo,
     sessionCount: Int = 1,
     presets: List<EQPreset>,
+    hazeState: HazeState? = null,
     onBindPreset: (String) -> Unit
 ) {
     var dropdownExpanded by remember { mutableStateOf(false) }
 
-    Card(
+    GlassmorphicCard(
         modifier = Modifier.fillMaxWidth(),
+        hazeState = hazeState,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-        )
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(14.dp),

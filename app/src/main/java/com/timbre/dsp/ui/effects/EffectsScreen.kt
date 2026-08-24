@@ -28,8 +28,6 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.SurroundSound
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,7 +54,9 @@ import com.timbre.dsp.data.ImpulseResponseProfile
 import com.timbre.dsp.model.DSPSettings
 import com.timbre.dsp.model.EQPreset
 import com.timbre.dsp.model.HearingAudiogram
+import com.timbre.dsp.ui.components.GlassmorphicCard
 import com.timbre.dsp.ui.hearing.HearingTestWizard
+import dev.chrisbanes.haze.HazeState
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,6 +76,7 @@ fun EffectsScreen(
     onConvolutionChange: (enabled: Boolean, profileId: String, wetDry: Float) -> Unit,
     onImportCustomIR: (Uri, String) -> Boolean,
     onApplyHearingAudiogram: (HearingAudiogram, EQPreset) -> Unit,
+    hazeState: HazeState? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -123,15 +124,13 @@ fun EffectsScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // 1. Hearing Calibration Card
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (settings.hearingAudiogram.isCalibrated)
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                else
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            hazeState = hazeState,
+            containerColor = if (settings.hearingAudiogram.isCalibrated)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -162,15 +161,13 @@ fun EffectsScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         // 2. Convolution / Impulse Response (.wav / .irs) Card (Option C)
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (settings.convolutionEnabled)
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                else
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            hazeState = hazeState,
+            containerColor = if (settings.convolutionEnabled)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -268,12 +265,10 @@ fun EffectsScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         // 3. Preamp Gain & Auto-Preamp Headroom Protection (Option A)
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            hazeState = hazeState,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -366,12 +361,10 @@ fun EffectsScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         // 4. Channel Balance & Mono Summing Card
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            hazeState = hazeState,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -431,12 +424,13 @@ fun EffectsScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         // 5. Bass Boost Card
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            hazeState = hazeState,
+            containerColor = if (settings.bassBoostEnabled)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -450,7 +444,7 @@ fun EffectsScreen(
                         Column {
                             Text("Sub-Bass Enhancer", style = MaterialTheme.typography.titleMedium)
                             Text(
-                                "Low-end resonance synthesizer",
+                                "Dynamic low-shelf harmonic boost",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -468,8 +462,8 @@ fun EffectsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Boost Level", style = MaterialTheme.typography.bodySmall)
-                        Text(String.format(Locale.US, "%.1f dB", settings.bassBoostGain), style = MaterialTheme.typography.bodySmall)
+                        Text("Bass Gain", style = MaterialTheme.typography.bodySmall)
+                        Text(String.format(Locale.US, "+%.1f dB", settings.bassBoostGain), style = MaterialTheme.typography.bodySmall)
                     }
                     Slider(
                         value = settings.bassBoostGain,
@@ -483,7 +477,7 @@ fun EffectsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Cutoff Frequency", style = MaterialTheme.typography.bodySmall)
-                        Text("${settings.bassBoostCutoffFreq.toInt()} Hz", style = MaterialTheme.typography.bodySmall)
+                        Text(String.format(Locale.US, "%.0f Hz", settings.bassBoostCutoffFreq), style = MaterialTheme.typography.bodySmall)
                     }
                     Slider(
                         value = settings.bassBoostCutoffFreq,
@@ -498,12 +492,13 @@ fun EffectsScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         // 6. Binaural Crossfeed & Spatializer
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            hazeState = hazeState,
+            containerColor = if (settings.crossfeedEnabled || settings.virtualizerEnabled)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -581,12 +576,13 @@ fun EffectsScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         // 7. Treble Clarity & Harmonic Exciter
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            hazeState = hazeState,
+            containerColor = if (settings.clarityEnabled)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(

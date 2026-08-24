@@ -265,7 +265,8 @@ fun MainScreen(
                     onClarityChange = { enabled, gain -> viewModel.setClarity(enabled, gain) },
                     onConvolutionChange = { enabled, profileId, wetDry -> viewModel.setConvolution(enabled, profileId, wetDry) },
                     onImportCustomIR = { uri, name -> viewModel.importCustomIR(uri, name) },
-                    onApplyHearingAudiogram = { audiogram, preset -> viewModel.applyHearingAudiogram(audiogram, preset) }
+                    onApplyHearingAudiogram = { audiogram, preset -> viewModel.applyHearingAudiogram(audiogram, preset) },
+                    hazeState = hazeState
                 )
                 2 -> SessionsScreen(
                     activeSessions = activeSessions,
@@ -276,7 +277,8 @@ fun MainScreen(
                     onBindAppPreset = { pkg, name, presetId -> viewModel.bindAppToPreset(pkg, name, presetId) },
                     onToggleAppProfile = { pkg, enabled -> viewModel.toggleAppProfile(pkg, enabled) },
                     onUpdateAppProfile = { pkg, presetId, enabled -> viewModel.updateAppProfile(pkg, presetId, enabled) },
-                    onRemoveAppProfile = { pkg -> viewModel.removeAppProfile(pkg) }
+                    onRemoveAppProfile = { pkg -> viewModel.removeAppProfile(pkg) },
+                    hazeState = hazeState
                 )
                 3 -> PermissionSetupSheet(
                     permissionStatus = permissionStatus,
@@ -291,7 +293,8 @@ fun MainScreen(
                     onCancelSleepTimer = { viewModel.cancelSleepTimer() },
                     onExportBackup = { viewModel.exportFullBackup(it) },
                     onImportBackup = { viewModel.importFullBackup(it) },
-                    onRefresh = { viewModel.refreshPermissions() }
+                    onRefresh = { viewModel.refreshPermissions() },
+                    hazeState = hazeState
                 )
             }
         }

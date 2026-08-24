@@ -35,8 +35,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,7 +54,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.timbre.dsp.model.PermissionStatus
 import com.timbre.dsp.permission.PermissionManager
+import com.timbre.dsp.ui.components.GlassmorphicCard
 import com.timbre.dsp.ui.magisk.MagiskInstallerDialog
+import dev.chrisbanes.haze.HazeState
 
 @Composable
 fun PermissionSetupSheet(
@@ -73,6 +73,7 @@ fun PermissionSetupSheet(
     onExportBackup: (Uri) -> Boolean,
     onImportBackup: (Uri) -> Boolean,
     onRefresh: () -> Unit,
+    hazeState: HazeState? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -129,15 +130,13 @@ fun PermissionSetupSheet(
         Spacer(modifier = Modifier.height(16.dp))
 
         // 1. DSP Sleep Timer Card (Option B)
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isSleepTimerRunning)
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                else
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            hazeState = hazeState,
+            containerColor = if (isSleepTimerRunning)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -186,12 +185,10 @@ fun PermissionSetupSheet(
         Spacer(modifier = Modifier.height(12.dp))
 
         // 2. Full Suite Backup & Restore Card (Option B)
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            hazeState = hazeState,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -243,7 +240,8 @@ fun PermissionSetupSheet(
             else if (permissionStatus.isShizukuRunning) "Shizuku is running, permission required"
             else "Shizuku service is not running or not installed",
             isConfigured = permissionStatus.hasShizukuPermission,
-            icon = Icons.Default.Security
+            icon = Icons.Default.Security,
+            hazeState = hazeState
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
@@ -273,7 +271,8 @@ fun PermissionSetupSheet(
             else if (permissionStatus.isRootAvailable) "Root detected, permissions pending"
             else "Standard unrooted device",
             isConfigured = permissionStatus.hasRootPermission,
-            icon = Icons.Default.FlashOn
+            icon = Icons.Default.FlashOn,
+            hazeState = hazeState
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (permissionStatus.isRootAvailable && !permissionStatus.hasDumpPermission) {
@@ -298,17 +297,18 @@ fun PermissionSetupSheet(
         // 5. Notification Access Card
         SetupItemCard(
             title = "Notification / Media Access",
-            subtitle = if (permissionStatus.hasNotificationAccess) "Media session tracking active"
-            else "Required to detect playback from Spotify, Apple Music, etc.",
+            subtitle = if (permissionStatus.hasNotificationAccess) "Notification listener active for media detection"
+            else "Required to auto-detect media players like Spotify & Apple Music",
             isConfigured = permissionStatus.hasNotificationAccess,
-            icon = Icons.Default.Notifications
+            icon = Icons.Default.Notifications,
+            hazeState = hazeState
         ) {
             Button(
                 onClick = onOpenNotificationSettings,
                 enabled = !permissionStatus.hasNotificationAccess,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (permissionStatus.hasNotificationAccess) "Access Enabled" else "Enable Notification Access")
+                Text(if (permissionStatus.hasNotificationAccess) "Active" else "Grant Media Notification Access")
             }
         }
 
@@ -316,67 +316,62 @@ fun PermissionSetupSheet(
 
         // 6. Battery Optimization Card
         SetupItemCard(
-            title = "Background Battery Optimization",
-            subtitle = if (permissionStatus.isBatteryOptimizationIgnored) "Unrestricted background DSP execution"
-            else "Prevent Android from killing audio service during screen-off",
+            title = "Battery Unrestricted Mode",
+            subtitle = if (permissionStatus.isBatteryOptimizationIgnored) "Battery optimization disabled for seamless background DSP"
+            else "Disable battery optimizations so Android does not kill the DSP audio daemon",
             isConfigured = permissionStatus.isBatteryOptimizationIgnored,
-            icon = Icons.Default.BatteryChargingFull
+            icon = Icons.Default.BatteryChargingFull,
+            hazeState = hazeState
         ) {
             Button(
                 onClick = onRequestBatteryOptimization,
                 enabled = !permissionStatus.isBatteryOptimizationIgnored,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (permissionStatus.isBatteryOptimizationIgnored) "Unrestricted" else "Disable Optimization")
+                Text(if (permissionStatus.isBatteryOptimizationIgnored) "Ignored (Optimal)" else "Request Unrestricted Battery")
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         // 7. Manual ADB Fallback Card
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-            )
+            hazeState = hazeState,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Terminal, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                    Icon(Icons.Default.Terminal, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Manual ADB Command (No Root/Shizuku)",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Text("Manual ADB Fallback (No Root / No Shizuku)", style = MaterialTheme.typography.titleMedium)
                 }
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "If you do not have Root or Shizuku, run this command from your computer:",
+                    text = "If Shizuku or Root is unavailable, run this single command once via ADB on your PC:",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Surface(
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    modifier = Modifier.fillMaxWidth()
+                    color = MaterialTheme.colorScheme.surface
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = PermissionManager.ADB_DUMP_COMMAND,
-                            fontFamily = FontFamily.Monospace,
                             style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace,
                             modifier = Modifier.weight(1f)
                         )
                         IconButton(onClick = {
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("ADB Command", PermissionManager.ADB_DUMP_COMMAND)
-                            clipboard.setPrimaryClip(clip)
+                            clipboard.setPrimaryClip(ClipData.newPlainText("ADB Command", PermissionManager.ADB_DUMP_COMMAND))
                             Toast.makeText(context, "Command copied to clipboard", Toast.LENGTH_SHORT).show()
                         }) {
                             Icon(Icons.Default.ContentCopy, contentDescription = "Copy")
@@ -390,12 +385,10 @@ fun PermissionSetupSheet(
 
         // 8. OEM / Samsung Audio Diagnostics Card
         val isSamsung = android.os.Build.MANUFACTURER.contains("samsung", ignoreCase = true)
-        Card(
+        GlassmorphicCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            )
+            hazeState = hazeState,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -444,17 +437,17 @@ private fun SetupItemCard(
     subtitle: String,
     isConfigured: Boolean,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    hazeState: HazeState? = null,
     content: @Composable () -> Unit
 ) {
-    Card(
+    GlassmorphicCard(
         modifier = Modifier.fillMaxWidth(),
+        hazeState = hazeState,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isConfigured)
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
-            else
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-        )
+        containerColor = if (isConfigured)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+        else
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
