@@ -23,7 +23,7 @@ object ThemeRepository {
         val themeMode = try { ThemeMode.valueOf(modeStr ?: ThemeMode.SYSTEM.name) } catch (e: Exception) { ThemeMode.SYSTEM }
         val useDynamicColor = prefs.getBoolean(KEY_DYNAMIC_COLOR, true)
         val seedColor = prefs.getLong(KEY_SEED_COLOR, 0xFF7B61FF)
-        val enableFrostedGlass = prefs.getBoolean(KEY_FROSTED_GLASS, true)
+        val enableFrostedGlass = prefs.getBoolean(KEY_FROSTED_GLASS, false)
 
         _themeSettings.value = ThemeSettings(
             themeMode = themeMode,

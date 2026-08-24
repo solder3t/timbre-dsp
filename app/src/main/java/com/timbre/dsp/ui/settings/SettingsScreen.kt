@@ -87,7 +87,6 @@ fun SettingsScreen(
     onSetThemeMode: (ThemeMode) -> Unit,
     onSetDynamicColor: (Boolean) -> Unit,
     onSetSeedColor: (Long) -> Unit,
-    onSetFrostedGlass: (Boolean) -> Unit,
     onSetRoutingMode: (RoutingMode) -> Unit,
     onToggleLimiter: (Boolean) -> Unit,
     onToggleVisualizer: (Boolean) -> Unit,
@@ -140,7 +139,6 @@ fun SettingsScreen(
                             onSetThemeMode = onSetThemeMode,
                             onSetDynamicColor = onSetDynamicColor,
                             onSetSeedColor = onSetSeedColor,
-                            onSetFrostedGlass = onSetFrostedGlass,
                             onBack = { currentSubScreen = SettingsSubScreen.MAIN },
                             hazeState = hazeState
                         )

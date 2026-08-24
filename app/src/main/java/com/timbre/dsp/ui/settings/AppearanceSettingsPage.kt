@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BlurOn
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ColorLens
@@ -56,7 +55,6 @@ fun AppearanceSettingsPage(
     onSetThemeMode: (ThemeMode) -> Unit,
     onSetDynamicColor: (Boolean) -> Unit,
     onSetSeedColor: (Long) -> Unit,
-    onSetFrostedGlass: (Boolean) -> Unit,
     onBack: () -> Unit,
     hazeState: HazeState? = null
 ) {
@@ -205,21 +203,6 @@ fun AppearanceSettingsPage(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 3. Frosted Glass Blur Card
-        SettingsCard(hazeState = hazeState) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                SettingsSwitchRow(
-                    icon = Icons.Default.BlurOn,
-                    title = stringResource(R.string.theme_blur_title),
-                    subtitle = stringResource(R.string.theme_blur_desc),
-                    checked = themeSettings.enableFrostedGlass,
-                    onCheckedChange = onSetFrostedGlass
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }

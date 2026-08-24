@@ -11,6 +11,7 @@ import com.timbre.dsp.model.EQPreset
 import com.timbre.dsp.model.FilterType
 import com.timbre.dsp.model.TargetCurve
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -276,7 +277,7 @@ class DSPRepositoryTest {
     val defaultSettings = com.timbre.dsp.theme.ThemeSettings()
     assertEquals(com.timbre.dsp.theme.ThemeMode.SYSTEM, defaultSettings.themeMode)
     assertTrue(defaultSettings.useDynamicColor)
-    assertTrue(defaultSettings.enableFrostedGlass)
+    assertFalse(defaultSettings.enableFrostedGlass)
 
     val accents = com.timbre.dsp.theme.ThemeSettings.predefinedAccents
     assertEquals(6, accents.size)

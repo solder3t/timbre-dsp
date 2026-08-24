@@ -34,7 +34,6 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -65,8 +64,10 @@ import com.timbre.dsp.ui.settings.SettingsScreen
 import com.timbre.dsp.ui.utils.WindowWidthClass
 import com.timbre.dsp.ui.utils.rememberWindowWidthClass
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
 
 data class NavTabItem(
     val title: String,
@@ -114,114 +115,145 @@ fun MainScreen(
 
     @Composable
     fun TabContent() {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .hazeSource(state = hazeState)
-        ) {
-            when (selectedTab) {
-                0 -> DashboardScreen(
-                    settings = settings,
-                    permissionStatus = permissionStatus,
-                    routingStatus = routingStatus,
-                    presets = presets,
-                    currentDevice = currentDevice,
-                    fftMagnitudes = fftMagnitudes,
-                    peakLevels = peakLevels,
-                    onToggleMaster = { viewModel.toggleMaster(it) },
-                    onSetEQMode = { viewModel.setEQMode(it) },
-                    onBandGainChange = { index, gain -> viewModel.setBandGain(index, gain) },
-                    onUpdateParametricBand = { viewModel.updateParametricBand(it) },
-                    onAddParametricBand = { viewModel.addParametricBand() },
-                    onDeleteParametricBand = { viewModel.deleteParametricBand(it) },
-                    onResetBands = { viewModel.resetBands() },
-                    onSelectPreset = { viewModel.selectPreset(it) },
-                    onApplyAutoEq = { viewModel.applyAutoEq(it) },
-                    onApplyImportedPreset = { preset, saveToLibrary -> viewModel.applyImportedPreset(preset, saveToLibrary) },
-                    onSaveCustomPreset = { viewModel.saveCustomPreset(it) },
-                    onDeleteCustomPreset = { viewModel.deleteCustomPreset(it) },
-                    onBindCurrentDevice = { viewModel.bindPresetToCurrentDevice(settings.currentPresetId) },
-                    onSetTargetCurve = { viewModel.setTargetCurve(it) },
-                    onNavigateToSetup = { selectedTab = 3 },
-                    onApplyAiSettings = { viewModel.applyAiSettings(it) },
-                    hazeState = if (themeSettings.enableFrostedGlass) hazeState else null
-                )
-                1 -> EffectsScreen(
-                    settings = settings,
-                    irProfiles = irProfiles,
-                    onPreampGainChange = { viewModel.setPreampGain(it) },
-                    onAutoPreampChange = { viewModel.setAutoPreamp(it) },
-                    onChannelBalanceChange = { viewModel.setChannelBalance(it) },
-                    onMonoChange = { viewModel.setMono(it) },
-                    onLimiterChange = { viewModel.setLimiter(it) },
-                    onBassBoostChange = { enabled, gain, cutoff -> viewModel.setBassBoost(enabled, gain, cutoff) },
-                    onCrossfeedChange = { enabled, strength -> viewModel.setCrossfeed(enabled, strength) },
-                    onVirtualizerChange = { enabled, strength -> viewModel.setVirtualizer(enabled, strength) },
-                    onClarityChange = { enabled, gain -> viewModel.setClarity(enabled, gain) },
-                    onConvolutionChange = { enabled, profileId, wetDry -> viewModel.setConvolution(enabled, profileId, wetDry) },
-                    onImportCustomIR = { uri, name -> viewModel.importCustomIR(uri, name) },
-                    onApplyHearingAudiogram = { audiogram, preset -> viewModel.applyHearingAudiogram(audiogram, preset) },
-                    hazeState = if (themeSettings.enableFrostedGlass) hazeState else null
-                )
-                2 -> SessionsScreen(
-                    activeSessions = activeSessions,
-                    appProfiles = appProfiles,
-                    installedApps = viewModel.getInstalledMediaApps(),
-                    presets = presets,
-                    onRescan = { viewModel.rescanSessions() },
-                    onBindAppPreset = { pkg, name, presetId -> viewModel.bindAppToPreset(pkg, name, presetId) },
-                    onToggleAppProfile = { pkg, enabled -> viewModel.toggleAppProfile(pkg, enabled) },
-                    onUpdateAppProfile = { pkg, presetId, enabled -> viewModel.updateAppProfile(pkg, presetId, enabled) },
-                    onRemoveAppProfile = { pkg -> viewModel.removeAppProfile(pkg) },
-                    hazeState = if (themeSettings.enableFrostedGlass) hazeState else null
-                )
-                3 -> SettingsScreen(
-                    settings = settings,
-                    themeSettings = themeSettings,
-                    permissionStatus = permissionStatus,
-                    isSleepTimerRunning = isSleepTimerRunning,
-                    sleepTimerSeconds = sleepTimerSeconds,
-                    onSetThemeMode = { viewModel.setThemeMode(it) },
-                    onSetDynamicColor = { viewModel.setDynamicColor(it) },
-                    onSetSeedColor = { viewModel.setSeedColor(it) },
-                    onSetFrostedGlass = { viewModel.setFrostedGlass(it) },
-                    onSetRoutingMode = { viewModel.setRoutingMode(it) },
-                    onToggleLimiter = { viewModel.toggleLimiter(it) },
-                    onToggleVisualizer = { viewModel.toggleVisualizer(it) },
-                    onRequestShizuku = { viewModel.requestShizukuPermission() },
-                    onGrantDumpShizuku = { viewModel.grantDumpViaShizuku() },
-                    onGrantDumpRoot = { viewModel.grantDumpViaRoot() },
-                    onOpenNotificationSettings = { viewModel.openNotificationSettings() },
-                    onRequestBatteryOptimization = { viewModel.requestBatteryOptimization() },
-                    onStartSleepTimer = { viewModel.startSleepTimer(it) },
-                    onCancelSleepTimer = { viewModel.cancelSleepTimer() },
-                    onExportBackup = { viewModel.exportFullBackup(it) },
-                    onImportBackup = { viewModel.importFullBackup(it) },
-                    onRefresh = { viewModel.refreshPermissions() },
-                    hazeState = if (themeSettings.enableFrostedGlass) hazeState else null
-                )
-            }
+        when (selectedTab) {
+            0 -> DashboardScreen(
+                settings = settings,
+                permissionStatus = permissionStatus,
+                routingStatus = routingStatus,
+                presets = presets,
+                currentDevice = currentDevice,
+                fftMagnitudes = fftMagnitudes,
+                peakLevels = peakLevels,
+                onToggleMaster = { viewModel.toggleMaster(it) },
+                onSetEQMode = { viewModel.setEQMode(it) },
+                onBandGainChange = { index, gain -> viewModel.setBandGain(index, gain) },
+                onUpdateParametricBand = { viewModel.updateParametricBand(it) },
+                onAddParametricBand = { viewModel.addParametricBand() },
+                onDeleteParametricBand = { viewModel.deleteParametricBand(it) },
+                onResetBands = { viewModel.resetBands() },
+                onSelectPreset = { viewModel.selectPreset(it) },
+                onApplyAutoEq = { viewModel.applyAutoEq(it) },
+                onApplyImportedPreset = { preset, saveToLibrary -> viewModel.applyImportedPreset(preset, saveToLibrary) },
+                onSaveCustomPreset = { viewModel.saveCustomPreset(it) },
+                onDeleteCustomPreset = { viewModel.deleteCustomPreset(it) },
+                onBindCurrentDevice = { viewModel.bindPresetToCurrentDevice(settings.currentPresetId) },
+                onSetTargetCurve = { viewModel.setTargetCurve(it) },
+                onNavigateToSetup = { selectedTab = 3 },
+                onApplyAiSettings = { viewModel.applyAiSettings(it) },
+                hazeState = hazeState
+            )
+            1 -> EffectsScreen(
+                settings = settings,
+                irProfiles = irProfiles,
+                onPreampGainChange = { viewModel.setPreampGain(it) },
+                onAutoPreampChange = { viewModel.setAutoPreamp(it) },
+                onChannelBalanceChange = { viewModel.setChannelBalance(it) },
+                onMonoChange = { viewModel.setMono(it) },
+                onLimiterChange = { viewModel.setLimiter(it) },
+                onBassBoostChange = { enabled, gain, cutoff -> viewModel.setBassBoost(enabled, gain, cutoff) },
+                onCrossfeedChange = { enabled, strength -> viewModel.setCrossfeed(enabled, strength) },
+                onVirtualizerChange = { enabled, strength -> viewModel.setVirtualizer(enabled, strength) },
+                onClarityChange = { enabled, gain -> viewModel.setClarity(enabled, gain) },
+                onConvolutionChange = { enabled, profileId, wetDry -> viewModel.setConvolution(enabled, profileId, wetDry) },
+                onImportCustomIR = { uri, name -> viewModel.importCustomIR(uri, name) },
+                onApplyHearingAudiogram = { audiogram, preset -> viewModel.applyHearingAudiogram(audiogram, preset) },
+                hazeState = hazeState
+            )
+            2 -> SessionsScreen(
+                activeSessions = activeSessions,
+                appProfiles = appProfiles,
+                installedApps = viewModel.getInstalledMediaApps(),
+                presets = presets,
+                onRescan = { viewModel.rescanSessions() },
+                onBindAppPreset = { pkg, name, presetId -> viewModel.bindAppToPreset(pkg, name, presetId) },
+                onToggleAppProfile = { pkg, enabled -> viewModel.toggleAppProfile(pkg, enabled) },
+                onUpdateAppProfile = { pkg, presetId, enabled -> viewModel.updateAppProfile(pkg, presetId, enabled) },
+                onRemoveAppProfile = { pkg -> viewModel.removeAppProfile(pkg) },
+                hazeState = hazeState
+            )
+            3 -> SettingsScreen(
+                settings = settings,
+                themeSettings = themeSettings,
+                permissionStatus = permissionStatus,
+                isSleepTimerRunning = isSleepTimerRunning,
+                sleepTimerSeconds = sleepTimerSeconds,
+                onSetThemeMode = { viewModel.setThemeMode(it) },
+                onSetDynamicColor = { viewModel.setDynamicColor(it) },
+                onSetSeedColor = { viewModel.setSeedColor(it) },
+                onSetRoutingMode = { viewModel.setRoutingMode(it) },
+                onToggleLimiter = { viewModel.toggleLimiter(it) },
+                onToggleVisualizer = { viewModel.toggleVisualizer(it) },
+                onRequestShizuku = { viewModel.requestShizukuPermission() },
+                onGrantDumpShizuku = { viewModel.grantDumpViaShizuku() },
+                onGrantDumpRoot = { viewModel.grantDumpViaRoot() },
+                onOpenNotificationSettings = { viewModel.openNotificationSettings() },
+                onRequestBatteryOptimization = { viewModel.requestBatteryOptimization() },
+                onStartSleepTimer = { viewModel.startSleepTimer(it) },
+                onCancelSleepTimer = { viewModel.cancelSleepTimer() },
+                onExportBackup = { viewModel.exportFullBackup(it) },
+                onImportBackup = { viewModel.importFullBackup(it) },
+                onRefresh = { viewModel.refreshPermissions() },
+                hazeState = hazeState
+            )
         }
     }
 
     if (isCompact) {
-        // COMPACT: Scaffold with Bottom Navigation Bar
-        Scaffold(
-            bottomBar = {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = onSurface,
-                    tonalElevation = 2.dp,
+        // COMPACT: Floating Navigation Bar with Deep Frosted Glass Blur
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+            // 1. Content layer registered as hazeSource so items blur under bottom bar
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .hazeSource(state = hazeState)
+            ) {
+                TabContent()
+            }
+
+            // 2. Glassmorphic bottom bar with increased frosted blur (HazeMaterials.regular)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .hazeEffect(
+                        state = hazeState,
+                        style = HazeMaterials.regular(MaterialTheme.colorScheme.surface.copy(alpha = 0.65f))
+                    )
+                    .navigationBarsPadding()
+            ) {
+                // Shimmer top divider line
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .matchParentSize()
                         .drawBehind {
                             drawLine(
-                                color = onSurface.copy(alpha = 0.08f),
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        onSurface.copy(alpha = 0.12f),
+                                        primary.copy(alpha = 0.35f),
+                                        onSurface.copy(alpha = 0.12f),
+                                        Color.Transparent
+                                    )
+                                ),
                                 start = Offset(0f, 0f),
                                 end = Offset(size.width, 0f),
                                 strokeWidth = 1.dp.toPx()
                             )
                         }
+                )
+
+                NavigationBar(
+                    containerColor = Color.Transparent,
+                    contentColor = onSurface,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(72.dp)
                 ) {
                     navTabs.forEachIndexed { index, tab ->
                         val isSelected = selectedTab == index
@@ -235,6 +267,24 @@ fun MainScreen(
                             label = "tab_icon_scale"
                         )
 
+                        val pillColor by animateColorAsState(
+                            targetValue = if (isSelected) primaryContainer.copy(alpha = 0.90f) else Color.Transparent,
+                            animationSpec = tween(durationMillis = 200),
+                            label = "tab_pill_color"
+                        )
+
+                        val iconTint by animateColorAsState(
+                            targetValue = if (isSelected) onPrimaryContainer else onSurfaceVariant.copy(alpha = 0.70f),
+                            animationSpec = tween(durationMillis = 200),
+                            label = "tab_icon_tint"
+                        )
+
+                        val labelColor by animateColorAsState(
+                            targetValue = if (isSelected) primary else onSurfaceVariant.copy(alpha = 0.65f),
+                            animationSpec = tween(durationMillis = 200),
+                            label = "tab_label_color"
+                        )
+
                         NavigationBarItem(
                             selected = isSelected,
                             onClick = {
@@ -244,22 +294,32 @@ fun MainScreen(
                                 }
                             },
                             icon = {
-                                Icon(
-                                    imageVector = tab.icon,
-                                    contentDescription = tab.title,
+                                Box(
                                     modifier = Modifier
-                                        .size(24.dp)
-                                        .graphicsLayer {
-                                            scaleX = scale
-                                            scaleY = scale
-                                        }
-                                )
+                                        .size(width = 56.dp, height = 30.dp)
+                                        .clip(RoundedCornerShape(15.dp))
+                                        .background(pillColor),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = tab.icon,
+                                        contentDescription = tab.title,
+                                        tint = iconTint,
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .graphicsLayer {
+                                                scaleX = scale
+                                                scaleY = scale
+                                            }
+                                    )
+                                }
                             },
                             label = {
                                 Text(
                                     text = tab.title,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = labelColor,
                                     maxLines = 1
                                 )
                             },
@@ -267,23 +327,13 @@ fun MainScreen(
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = onPrimaryContainer,
                                 selectedTextColor = primary,
-                                indicatorColor = primaryContainer,
+                                indicatorColor = Color.Transparent,
                                 unselectedIconColor = onSurfaceVariant.copy(alpha = 0.70f),
                                 unselectedTextColor = onSurfaceVariant.copy(alpha = 0.65f)
                             )
                         )
                     }
                 }
-            },
-            modifier = modifier.fillMaxSize()
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .statusBarsPadding()
-            ) {
-                TabContent()
             }
         }
     } else {
@@ -295,7 +345,7 @@ fun MainScreen(
                 .navigationBarsPadding()
         ) {
             NavigationRail(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
                 contentColor = onSurface,
                 header = {
                     Column(
@@ -396,6 +446,7 @@ fun MainScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
+                    .hazeSource(state = hazeState)
             ) {
                 TabContent()
             }

@@ -119,7 +119,7 @@ fun SessionsScreen(
                 start = 16.dp,
                 end = 16.dp,
                 top = 16.dp,
-                bottom = 24.dp
+                bottom = 90.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
