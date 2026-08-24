@@ -1,6 +1,7 @@
 package com.timbre.dsp.audio
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
@@ -10,16 +11,20 @@ import com.timbre.dsp.model.OutputDeviceType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 
 class DeviceProfileManager private constructor(private val context: Context) {
 
+    private val prefs: SharedPreferences = context.getSharedPreferences("timbre_device_profiles_prefs", Context.MODE_PRIVATE)
     private val audioManager = context.getSystemService(AudioManager::class.java)
 
     private val deviceProfiles = ConcurrentHashMap<String, DeviceProfile>()
     private val _currentDevice = MutableStateFlow<DeviceProfile?>(null)
     val currentDevice: StateFlow<DeviceProfile?> = _currentDevice.asStateFlow()
 
+    private var lastHandledDeviceId: String? = null
     private var onDeviceProfileChangeListener: ((presetId: String) -> Unit)? = null
 
     private val audioDeviceCallback = object : AudioDeviceCallback() {
@@ -33,11 +38,50 @@ class DeviceProfileManager private constructor(private val context: Context) {
     }
 
     init {
+        loadProfiles()
         try {
             audioManager?.registerAudioDeviceCallback(audioDeviceCallback, null)
             detectCurrentOutputDevice()
         } catch (e: Throwable) {
             Log.e(TAG, "Failed registering audio device callback", e)
+        }
+    }
+
+    private fun loadProfiles() {
+        val savedJson = prefs.getString(KEY_DEVICE_PROFILES_JSON, null) ?: return
+        try {
+            val array = JSONArray(savedJson)
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                val id = obj.getString("deviceId")
+                val name = obj.getString("deviceName")
+                val typeStr = obj.getString("deviceType")
+                val presetId = obj.getString("presetId")
+                val isEnabled = obj.optBoolean("isEnabled", true)
+                val type = try { OutputDeviceType.valueOf(typeStr) } catch (e: Exception) { OutputDeviceType.OTHER }
+                deviceProfiles[id] = DeviceProfile(id, name, type, presetId, isEnabled)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed loading device profiles", e)
+        }
+    }
+
+    private fun saveProfiles() {
+        try {
+            val array = JSONArray()
+            for (profile in deviceProfiles.values) {
+                val obj = JSONObject().apply {
+                    put("deviceId", profile.deviceId)
+                    put("deviceName", profile.deviceName)
+                    put("deviceType", profile.deviceType.name)
+                    put("presetId", profile.presetId)
+                    put("isEnabled", profile.isEnabled)
+                }
+                array.put(obj)
+            }
+            prefs.edit().putString(KEY_DEVICE_PROFILES_JSON, array.toString()).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed saving device profiles", e)
         }
     }
 
@@ -51,6 +95,8 @@ class DeviceProfileManager private constructor(private val context: Context) {
         if (_currentDevice.value?.deviceId == deviceId) {
             _currentDevice.value = profile
         }
+        saveProfiles()
+        Log.i(TAG, "Bound preset '$presetId' to device '$deviceName' ($deviceId)")
     }
 
     fun detectCurrentOutputDevice() {
@@ -82,17 +128,24 @@ class DeviceProfileManager private constructor(private val context: Context) {
 
         if (selectedInfo != null) {
             val (devType, name) = resolveDeviceInfo(selectedInfo)
-            val devId = "${devType.name}_${selectedInfo.id}"
+            // Stable device key by type and name
+            val devId = "${devType.name}_${name.trim().replace(" ", "_")}"
             val existing = deviceProfiles[devId] ?: DeviceProfile(
                 deviceId = devId,
                 deviceName = name,
                 deviceType = devType,
-                presetId = "flat"
+                presetId = "" // Empty preset means no auto-override unless user configured one
             )
             _currentDevice.value = existing
-            Log.i(TAG, "Active audio output device: $name (${devType.name})")
 
-            if (existing.isEnabled && existing.presetId.isNotBlank()) {
+            val deviceChanged = (lastHandledDeviceId != devId)
+            lastHandledDeviceId = devId
+
+            Log.i(TAG, "Active audio output device: $name (${devType.name}) [changed=$deviceChanged]")
+
+            // Only trigger auto-preset if the device has actually changed AND user explicitly bound a preset to it
+            if (deviceChanged && existing.isEnabled && existing.presetId.isNotBlank()) {
+                Log.i(TAG, "Auto-switching to bound preset: ${existing.presetId} for device $name")
                 onDeviceProfileChangeListener?.invoke(existing.presetId)
             }
         }
@@ -112,6 +165,7 @@ class DeviceProfileManager private constructor(private val context: Context) {
 
     companion object {
         private const val TAG = "DeviceProfileManager"
+        private const val KEY_DEVICE_PROFILES_JSON = "key_device_profiles_json"
 
         @Volatile
         private var instance: DeviceProfileManager? = null

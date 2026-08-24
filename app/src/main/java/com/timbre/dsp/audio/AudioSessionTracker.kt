@@ -29,10 +29,26 @@ class AudioSessionTracker private constructor(private val context: Context) {
     val activeSessions: StateFlow<List<AudioSessionInfo>> = _activeSessions.asStateFlow()
 
     private val effectManager = AudioEffectManager.getInstance(context)
+    private val appProfileManager = AppProfileManager.getInstance(context)
     private val scope = CoroutineScope(Dispatchers.IO)
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
 
     private var playbackCallback: AudioManager.AudioPlaybackCallback? = null
+
+    private val ignoredPackages = setOf(
+        "com.samsung.android.app.clockpack",
+        "com.samsung.android.honeyboard",
+        "com.sec.android.app.soundalive",
+        "com.android.systemui",
+        "android",
+        "com.google.android.inputmethod.latin",
+        "com.mediatek",
+        "com.mediatek.engineermode",
+        "com.android.server.telecom",
+        "com.google.android.dialer",
+        "com.samsung.android.dialer",
+        context.packageName
+    )
 
     init {
         registerPlaybackCallback()
@@ -48,9 +64,24 @@ class AudioSessionTracker private constructor(private val context: Context) {
                     val currentSids = mutableSetOf<Int>()
 
                     for (config in configs) {
+                        // Check if actively playing (API 29+) or valid audio configuration
+                        val isPlaying = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            try {
+                                val stateMethod = AudioPlaybackConfiguration::class.java.getDeclaredMethod("getPlayerState")
+                                stateMethod.isAccessible = true
+                                val state = stateMethod.invoke(config) as? Int
+                                state == null || state == 2 // 2 = AudioPlaybackConfiguration.PLAYER_STATE_STARTED
+                            } catch (e: Throwable) {
+                                true
+                            }
+                        } else {
+                            true
+                        }
+
                         val sid = extractSessionId(config)
                         val pkgName = resolvePackageNameForConfig(config)
-                        if (sid > 0) {
+
+                        if (sid > 0 && isPlaying && !isPackageIgnored(pkgName)) {
                             currentSids.add(sid)
                             if (!sessionsMap.containsKey(sid)) {
                                 onSessionOpened(sid, pkgName)
@@ -58,7 +89,7 @@ class AudioSessionTracker private constructor(private val context: Context) {
                         }
                     }
 
-                    // Remove sessions that ended
+                    // Remove sessions that ended or stopped
                     val toRemove = sessionsMap.keys.filter { it !in currentSids && it > 0 }
                     for (sid in toRemove) {
                         onSessionClosed(sid)
@@ -73,6 +104,16 @@ class AudioSessionTracker private constructor(private val context: Context) {
                 Log.w(TAG, "Could not register AudioPlaybackCallback", e)
             }
         }
+    }
+
+    private fun isPackageIgnored(packageName: String): Boolean {
+        if (packageName.isBlank() || packageName in ignoredPackages) return true
+        val lower = packageName.lowercase()
+        return lower.startsWith("com.samsung.android.app.clockpack") ||
+               lower.startsWith("com.android.systemui") ||
+               lower == "android" ||
+               lower.contains("soundalive") ||
+               lower == context.packageName.lowercase()
     }
 
     private fun extractSessionId(config: AudioPlaybackConfiguration): Int {
@@ -101,7 +142,7 @@ class AudioSessionTracker private constructor(private val context: Context) {
     }
 
     fun onSessionOpened(sessionId: Int, packageName: String) {
-        if (sessionId <= 0) return
+        if (sessionId <= 0 || isPackageIgnored(packageName)) return
         val appName = getAppName(packageName)
         val session = AudioSessionInfo(
             sessionId = sessionId,
@@ -112,6 +153,7 @@ class AudioSessionTracker private constructor(private val context: Context) {
         sessionsMap[sessionId] = session
         updateState()
         effectManager.attachEffectToSession(sessionId)
+        appProfileManager.checkAndApplyAppProfile(packageName)
         Log.i(TAG, "Audio session registered: $sessionId ($appName)")
     }
 
@@ -201,21 +243,12 @@ class AudioSessionTracker private constructor(private val context: Context) {
         while (tableMatcher.find()) {
             val uid = tableMatcher.group(2)?.toIntOrNull() ?: 0
             val sid = tableMatcher.group(3)?.toIntOrNull() ?: 0
-            if (sid > 0) {
-                val pkg = if (uid > 0) {
-                    context.packageManager.getPackagesForUid(uid)?.firstOrNull() ?: "Player"
-                } else "Active Playback Stream"
-                discoveredSessions[sid] = pkg
-            }
-        }
-
-        // 2. Fallback key-value pattern: Session id : 1234
-        val sessionPattern = Pattern.compile("Session\\s*(?:id)?\\s*[:=]?\\s*(\\d+)", Pattern.CASE_INSENSITIVE)
-        val matcher = sessionPattern.matcher(dumpText)
-        while (matcher.find()) {
-            val sid = matcher.group(1)?.toIntOrNull() ?: continue
-            if (sid > 0 && !discoveredSessions.containsKey(sid)) {
-                discoveredSessions[sid] = "Active Playback Stream"
+            if (sid > 0 && uid >= 10000) { // Only user application UIDs (ignore system daemon UIDs < 10000)
+                val pkgs = context.packageManager.getPackagesForUid(uid)
+                val pkg = pkgs?.firstOrNull() ?: ""
+                if (pkg.isNotBlank() && !isPackageIgnored(pkg)) {
+                    discoveredSessions[sid] = pkg
+                }
             }
         }
 

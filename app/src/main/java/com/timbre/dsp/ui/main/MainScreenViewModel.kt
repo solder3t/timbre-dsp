@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.timbre.dsp.DSPEngine
+import com.timbre.dsp.DSPForegroundService
 import com.timbre.dsp.RoutingManager
 import com.timbre.dsp.RoutingStatus
 import com.timbre.dsp.audio.AppProfileManager
@@ -52,15 +53,21 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
     val currentDevice: StateFlow<DeviceProfile?> = deviceManager.currentDevice
     val appProfiles: StateFlow<List<AppProfile>> = appProfileManager.profilesList
 
-    private val _settings = MutableStateFlow(DSPSettings())
+    private val _settings = MutableStateFlow(com.timbre.dsp.data.SettingsRepository.loadSettings(application))
     val settings: StateFlow<DSPSettings> = _settings.asStateFlow()
 
     init {
         DSPEngine.start()
+        val initialSettings = _settings.value
+        DSPForegroundService.currentSettings = initialSettings
+        DSPTileService.currentSettings = initialSettings
+        effectManager.updateSettings(initialSettings)
+        DSPEngine.applySettings(initialSettings)
+
         refreshPermissions()
         sessionTracker.scanAudioFlinger()
 
-        // Device auto-switch listener
+        // Device auto-switch listener (only triggered on device changes with bound presets)
         deviceManager.setOnProfileChangeListener { presetId ->
             val preset = PresetRepository.getPresetById(presetId)
             if (preset != null) {
@@ -79,8 +86,10 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun pushSettings(newSettings: DSPSettings) {
         _settings.value = newSettings
+        com.timbre.dsp.data.SettingsRepository.saveSettings(getApplication(), newSettings)
         DSPTileService.isDspEnabled = newSettings.isEnabled
         DSPTileService.currentSettings = newSettings
+        DSPForegroundService.currentSettings = newSettings
         effectManager.updateSettings(newSettings)
         DSPEngine.applySettings(newSettings)
     }
