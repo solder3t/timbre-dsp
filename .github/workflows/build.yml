@@ -150,6 +150,22 @@ jobs:
           echo "tag=v${VERSION_NAME}-${VERSION_CODE}" >> $GITHUB_OUTPUT
           echo "name=Timbre DSP v${VERSION_NAME} (${VERSION_CODE})" >> $GITHUB_OUTPUT
 
+      - name: Prepare release files
+        run: |
+          VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts)
+          if [ -d "dist/apk" ]; then
+            for apk in dist/apk/*.apk; do
+              [ -f "$apk" ] || continue
+              mv "$apk" "dist/apk/Timbre-DSP-v${VERSION_NAME}.apk"
+            done
+          fi
+          if [ -d "dist/aab" ]; then
+            for aab in dist/aab/*.aab; do
+              [ -f "$aab" ] || continue
+              mv "$aab" "dist/aab/Timbre-DSP-v${VERSION_NAME}.aab"
+            done
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

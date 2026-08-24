@@ -90,6 +90,10 @@ android {
     }
 }
 
+base {
+    archivesName.set("Timbre-DSP-v${android.defaultConfig.versionName}")
+}
+
 kotlin {
     jvmToolchain(17)
 }
