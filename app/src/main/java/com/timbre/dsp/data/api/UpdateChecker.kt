@@ -51,13 +51,16 @@ object UpdateChecker {
                     )
                 }
 
-                val body = response.body?.string() ?: return@withContext UpdateInfo(
-                    isAvailable = false,
-                    latestVersion = currentVersion,
-                    changelog = "",
-                    apkUrl = null,
-                    releaseUrl = "https://github.com/solder3t/timbre-dsp/releases"
-                )
+                val body = response.body.string()
+                if (body.isBlank()) {
+                    return@withContext UpdateInfo(
+                        isAvailable = false,
+                        latestVersion = currentVersion,
+                        changelog = "",
+                        apkUrl = null,
+                        releaseUrl = "https://github.com/solder3t/timbre-dsp/releases"
+                    )
+                }
 
                 val json = JsonParser.parseString(body).asJsonObject
                 val rawTag = json.get("tag_name")?.asString ?: ""
