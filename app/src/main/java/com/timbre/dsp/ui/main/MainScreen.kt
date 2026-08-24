@@ -31,7 +31,6 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,6 +42,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -59,18 +60,25 @@ import com.timbre.dsp.ui.sessions.SessionsScreen
 import com.timbre.dsp.ui.settings.SettingsScreen
 import com.timbre.dsp.ui.utils.WindowWidthClass
 import com.timbre.dsp.ui.utils.rememberWindowWidthClass
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
 
 data class NavTabItem(
     val title: String,
     val icon: ImageVector
 )
 
+@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: MainScreenViewModel = viewModel()
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
+    val hazeState = remember { HazeState() }
     val haptic = LocalHapticFeedback.current
     val windowWidthClass = rememberWindowWidthClass()
     val isCompact = windowWidthClass == WindowWidthClass.COMPACT
@@ -184,23 +192,61 @@ fun MainScreen(
     }
 
     if (isCompact) {
-        // COMPACT: Scaffold with standard solid Material 3 NavigationBar
-        Scaffold(
-            bottomBar = {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = onSurface,
-                    tonalElevation = 2.dp,
+        // COMPACT: Floating Navigation Bar with Deep Frosted Glass Blur
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+            // 1. Content layer registered as hazeSource so scrolling items blur underneath the bottom bar
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .hazeSource(state = hazeState)
+            ) {
+                TabContent()
+            }
+
+            // 2. Frosted glass bottom bar with Haze blur effect
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .hazeEffect(
+                        state = hazeState,
+                        style = HazeMaterials.regular(MaterialTheme.colorScheme.surface.copy(alpha = 0.70f))
+                    )
+                    .navigationBarsPadding()
+            ) {
+                // Top border line
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .matchParentSize()
                         .drawBehind {
                             drawLine(
-                                color = onSurface.copy(alpha = 0.08f),
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        onSurface.copy(alpha = 0.12f),
+                                        primary.copy(alpha = 0.35f),
+                                        onSurface.copy(alpha = 0.12f),
+                                        Color.Transparent
+                                    )
+                                ),
                                 start = Offset(0f, 0f),
                                 end = Offset(size.width, 0f),
                                 strokeWidth = 1.dp.toPx()
                             )
                         }
+                )
+
+                NavigationBar(
+                    containerColor = Color.Transparent,
+                    contentColor = onSurface,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(72.dp)
                 ) {
                     navTabs.forEachIndexed { index, tab ->
                         val isSelected = selectedTab == index
@@ -253,17 +299,6 @@ fun MainScreen(
                         )
                     }
                 }
-            },
-            modifier = modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                TabContent()
             }
         }
     } else {
