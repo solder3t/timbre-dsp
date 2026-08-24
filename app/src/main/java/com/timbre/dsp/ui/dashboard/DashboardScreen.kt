@@ -180,9 +180,13 @@ fun DashboardScreen(
     }
 
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            top = 16.dp,
+            bottom = 100.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // 1. Master Switch Card with Frosted Glass
@@ -545,14 +549,12 @@ private fun ParametricBandCard(
     isEnabled: Boolean,
     onClick: () -> Unit
 ) {
-    Card(
+    GlassmorphicCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = isEnabled, onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     ) {
         Row(
             modifier = Modifier

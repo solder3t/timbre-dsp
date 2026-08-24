@@ -103,9 +103,13 @@ fun SessionsScreen(
     }
 
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            top = 16.dp,
+            bottom = 100.dp
+        ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {

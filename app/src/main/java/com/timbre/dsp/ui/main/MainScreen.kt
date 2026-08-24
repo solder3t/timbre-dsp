@@ -10,8 +10,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
@@ -23,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -96,134 +96,16 @@ fun MainScreen(
     val onSurface = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .hazeEffect(
-                        state = hazeState,
-                        style = HazeMaterials.thin(MaterialTheme.colorScheme.surface.copy(alpha = 0.72f))
-                    )
-            ) {
-                // Shimmer top divider line (matches Musaic Player)
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .drawBehind {
-                            drawLine(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        onSurface.copy(alpha = 0.12f),
-                                        primary.copy(alpha = 0.35f),
-                                        onSurface.copy(alpha = 0.12f),
-                                        Color.Transparent
-                                    )
-                                ),
-                                start = Offset(0f, 0f),
-                                end = Offset(size.width, 0f),
-                                strokeWidth = 1.dp.toPx()
-                            )
-                        }
-                )
-
-                NavigationBar(
-                    containerColor = Color.Transparent,
-                    contentColor = onSurface,
-                    tonalElevation = 0.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(76.dp)
-                ) {
-                    navTabs.forEachIndexed { index, tab ->
-                        val isSelected = selectedTab == index
-
-                        val scale by animateFloatAsState(
-                            targetValue = if (isSelected) 1.18f else 1.0f,
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessMedium
-                            ),
-                            label = "tab_icon_scale"
-                        )
-
-                        val pillColor by animateColorAsState(
-                            targetValue = if (isSelected) primaryContainer.copy(alpha = 0.90f) else Color.Transparent,
-                            animationSpec = tween(durationMillis = 200),
-                            label = "tab_pill_color"
-                        )
-
-                        val iconTint by animateColorAsState(
-                            targetValue = if (isSelected) onPrimaryContainer else onSurfaceVariant.copy(alpha = 0.70f),
-                            animationSpec = tween(durationMillis = 200),
-                            label = "tab_icon_tint"
-                        )
-
-                        val labelColor by animateColorAsState(
-                            targetValue = if (isSelected) primary else onSurfaceVariant.copy(alpha = 0.65f),
-                            animationSpec = tween(durationMillis = 200),
-                            label = "tab_label_color"
-                        )
-
-                        NavigationBarItem(
-                            selected = isSelected,
-                            onClick = {
-                                if (selectedTab != index) {
-                                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                                    selectedTab = index
-                                }
-                            },
-                            icon = {
-                                Box(
-                                    modifier = Modifier
-                                        .size(width = 56.dp, height = 30.dp)
-                                        .clip(RoundedCornerShape(15.dp))
-                                        .background(pillColor),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = tab.icon,
-                                        contentDescription = tab.title,
-                                        tint = iconTint,
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .graphicsLayer {
-                                                scaleX = scale
-                                                scaleY = scale
-                                            }
-                                    )
-                                }
-                            },
-                            label = {
-                                Text(
-                                    text = tab.title,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = labelColor,
-                                    maxLines = 1
-                                )
-                            },
-                            alwaysShowLabel = true,
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = onPrimaryContainer,
-                                selectedTextColor = primary,
-                                indicatorColor = Color.Transparent,
-                                unselectedIconColor = onSurfaceVariant.copy(alpha = 0.70f),
-                                unselectedTextColor = onSurfaceVariant.copy(alpha = 0.65f)
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    ) { innerPadding ->
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+    ) {
+        // 1. Full-screen content layer registered as hazeSource so items blur under bottom bar
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .hazeSource(state = hazeState)
-                .padding(innerPadding)
         ) {
             when (selectedTab) {
                 0 -> DashboardScreen(
@@ -296,6 +178,128 @@ fun MainScreen(
                     onRefresh = { viewModel.refreshPermissions() },
                     hazeState = hazeState
                 )
+            }
+        }
+
+        // 2. Floating glassmorphic bottom bar over the content (true frosted glass blur)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .hazeEffect(
+                    state = hazeState,
+                    style = HazeMaterials.thin(MaterialTheme.colorScheme.surface.copy(alpha = 0.70f))
+                )
+                .navigationBarsPadding()
+        ) {
+            // Shimmer top divider line
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .drawBehind {
+                        drawLine(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    onSurface.copy(alpha = 0.12f),
+                                    primary.copy(alpha = 0.35f),
+                                    onSurface.copy(alpha = 0.12f),
+                                    Color.Transparent
+                                )
+                            ),
+                            start = Offset(0f, 0f),
+                            end = Offset(size.width, 0f),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+            )
+
+            NavigationBar(
+                containerColor = Color.Transparent,
+                contentColor = onSurface,
+                tonalElevation = 0.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(72.dp)
+            ) {
+                navTabs.forEachIndexed { index, tab ->
+                    val isSelected = selectedTab == index
+
+                    val scale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.18f else 1.0f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        label = "tab_icon_scale"
+                    )
+
+                    val pillColor by animateColorAsState(
+                        targetValue = if (isSelected) primaryContainer.copy(alpha = 0.90f) else Color.Transparent,
+                        animationSpec = tween(durationMillis = 200),
+                        label = "tab_pill_color"
+                    )
+
+                    val iconTint by animateColorAsState(
+                        targetValue = if (isSelected) onPrimaryContainer else onSurfaceVariant.copy(alpha = 0.70f),
+                        animationSpec = tween(durationMillis = 200),
+                        label = "tab_icon_tint"
+                    )
+
+                    val labelColor by animateColorAsState(
+                        targetValue = if (isSelected) primary else onSurfaceVariant.copy(alpha = 0.65f),
+                        animationSpec = tween(durationMillis = 200),
+                        label = "tab_label_color"
+                    )
+
+                    NavigationBarItem(
+                        selected = isSelected,
+                        onClick = {
+                            if (selectedTab != index) {
+                                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                selectedTab = index
+                            }
+                        },
+                        icon = {
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 56.dp, height = 30.dp)
+                                    .clip(RoundedCornerShape(15.dp))
+                                    .background(pillColor),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = tab.icon,
+                                    contentDescription = tab.title,
+                                    tint = iconTint,
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .graphicsLayer {
+                                            scaleX = scale
+                                            scaleY = scale
+                                        }
+                                )
+                            }
+                        },
+                        label = {
+                            Text(
+                                text = tab.title,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = labelColor,
+                                maxLines = 1
+                            )
+                        },
+                        alwaysShowLabel = true,
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = onPrimaryContainer,
+                            selectedTextColor = primary,
+                            indicatorColor = Color.Transparent,
+                            unselectedIconColor = onSurfaceVariant.copy(alpha = 0.70f),
+                            unselectedTextColor = onSurfaceVariant.copy(alpha = 0.65f)
+                        )
+                    )
+                }
             }
         }
     }
