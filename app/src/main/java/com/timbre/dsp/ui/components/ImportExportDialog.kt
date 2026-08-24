@@ -144,7 +144,7 @@ fun ImportExportDialog(
                     OutlinedTextField(
                         value = importText,
                         onValueChange = { importText = it },
-                        label = { Text("Peace EQ / AutoEq / JSON Text") },
+                        label = { Text("PEQ / AutoEq / Peace / JSON Text") },
                         placeholder = { Text(stringResource(R.string.dialog_paste_config_placeholder)) },
                         textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         modifier = Modifier.fillMaxWidth().height(140.dp),
@@ -227,7 +227,7 @@ fun ImportExportDialog(
                         value = exportedText,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Peace EQ Format") },
+                        label = { Text("Parametric EQ / Peace Format") },
                         textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         modifier = Modifier.fillMaxWidth().height(200.dp),
                         shape = RoundedCornerShape(12.dp)

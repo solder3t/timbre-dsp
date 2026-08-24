@@ -41,7 +41,7 @@
     <string name="action_ai_assistant">AI Assistant</string>
     <string name="action_autoeq_profiles">AutoEq Profiles</string>
     <string name="action_save_preset">Save Preset</string>
-    <string name="action_peace_import">Peace / APO Import</string>
+    <string name="action_peace_import">Import / Export PEQ</string>
     <string name="action_reset_flat">Reset Flat</string>
 
     <!-- Preset Library -->
