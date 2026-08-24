@@ -1,18 +1,20 @@
+# Built application & temp files
 *.iml
-.gradle
-/local.properties
-/.idea
+.gradle/
+local.properties
 .idea/
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+build/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+**/.cxx/
 
-# Keystore
+# Keystore & Secrets
 *.jks
 keystore.properties
 release-key.jks
 release-key.b64
 upload_certificate.pem
+
