@@ -60,7 +60,7 @@ class DeviceProfileManager private constructor(private val context: Context) {
         // Priority: Bluetooth > USB > Wired > Speaker
         val priorityOrder = listOf(
             AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
-            AudioDeviceInfo.TYPE_BLUETOOTH_LE_HEADSET,
+            AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
             AudioDeviceInfo.TYPE_USB_DEVICE,
             AudioDeviceInfo.TYPE_USB_HEADSET,
             AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
@@ -69,7 +69,7 @@ class DeviceProfileManager private constructor(private val context: Context) {
         )
 
         for (targetType in priorityOrder) {
-            val match = devices.firstOrNull { it.type == targetType }
+            val match = devices.firstOrNull { it.type == targetType || it.type == 26 || it.type == 27 }
             if (match != null) {
                 selectedInfo = match
                 break
@@ -101,7 +101,7 @@ class DeviceProfileManager private constructor(private val context: Context) {
     private fun resolveDeviceInfo(info: AudioDeviceInfo): Pair<OutputDeviceType, String> {
         val name = if (info.productName.isNotBlank()) info.productName.toString() else "Audio Output"
         val type = when (info.type) {
-            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_LE_HEADSET -> OutputDeviceType.BLUETOOTH
+            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_SCO, 26, 27 -> OutputDeviceType.BLUETOOTH
             AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_HEADSET -> OutputDeviceType.USB
             AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET -> OutputDeviceType.WIRED
             AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> OutputDeviceType.SPEAKER

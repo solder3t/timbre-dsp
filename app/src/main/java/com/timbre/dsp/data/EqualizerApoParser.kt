@@ -1,5 +1,6 @@
 package com.timbre.dsp.data
 
+import com.timbre.dsp.model.DSPSettings
 import com.timbre.dsp.model.EQBand
 import com.timbre.dsp.model.EQMode
 import com.timbre.dsp.model.EQPreset

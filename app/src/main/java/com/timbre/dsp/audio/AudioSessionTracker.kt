@@ -103,11 +103,22 @@ class AudioSessionTracker private constructor(private val context: Context) {
 
     private fun runShizukuDump(): String {
         return try {
-            val process = Shizuku.newProcess(arrayOf("dumpsys", "media.audio_flinger"), null, null)
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            val text = reader.readText()
-            process.waitFor()
-            text
+            val method = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java
+            )
+            method.isAccessible = true
+            val process = method.invoke(null, arrayOf("dumpsys", "media.audio_flinger"), null, null) as? Process
+            if (process != null) {
+                val reader = BufferedReader(InputStreamReader(process.inputStream))
+                val text = reader.readText()
+                process.waitFor()
+                text
+            } else {
+                ""
+            }
         } catch (e: Throwable) {
             Log.w(TAG, "Shizuku dumpsys failed", e)
             ""

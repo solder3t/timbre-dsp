@@ -91,7 +91,7 @@ fun ImportExportDialog(
                         onValueChange = { importText = it },
                         label = { Text("Peace EQ / AutoEq Text") },
                         placeholder = { Text("Filter 1: ON PK Fc 31 Hz Gain 3.5 dB Q 1.41\nFilter 2: ON LSC Fc 105 Hz Gain 5.5 dB Q 0.71") },
-                        fontFamily = FontFamily.Monospace,
+                        textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         modifier = Modifier.fillMaxWidth().height(160.dp),
                         shape = RoundedCornerShape(12.dp)
                     )
@@ -119,7 +119,7 @@ fun ImportExportDialog(
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Peace EQ Format") },
-                        fontFamily = FontFamily.Monospace,
+                        textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         modifier = Modifier.fillMaxWidth().height(200.dp),
                         shape = RoundedCornerShape(12.dp)
                     )

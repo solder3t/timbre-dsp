@@ -56,6 +56,7 @@ fun ParametricBandEditorDialog(
     var typeDropdownExpanded by remember { mutableStateOf(false) }
 
     val filterTypes = FilterType.values()
+    val supportsGain = filterType == FilterType.PEAK || filterType == FilterType.LOW_SHELF || filterType == FilterType.HIGH_SHELF
 
     AlertDialog(
         onDismissRequest = onDismiss,

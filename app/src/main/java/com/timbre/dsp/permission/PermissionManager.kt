@@ -118,8 +118,8 @@ class PermissionManager(private val context: Context) {
 
     fun requestShizukuPermission() {
         try {
-            if (Shizuku.isPre_V11()) {
-                Log.w(TAG, "Shizuku pre-v11 is not supported")
+            if (Shizuku.getVersion() < 11) {
+                Log.w(TAG, "Shizuku version is older than 11")
                 return
             }
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
@@ -144,8 +144,15 @@ class PermissionManager(private val context: Context) {
         }
         try {
             val cmd = arrayOf("pm", "grant", context.packageName, Manifest.permission.DUMP)
-            val process = Shizuku.newProcess(cmd, null, null)
-            val exitCode = process.waitFor()
+            val method = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java
+            )
+            method.isAccessible = true
+            val process = method.invoke(null, cmd, null, null) as? java.lang.Process
+            val exitCode = process?.waitFor() ?: -1
             Log.i(TAG, "Granted DUMP via Shizuku exitCode=$exitCode")
             refreshStatus()
             exitCode == 0

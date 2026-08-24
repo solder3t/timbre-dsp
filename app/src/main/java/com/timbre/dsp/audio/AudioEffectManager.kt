@@ -197,8 +197,8 @@ class AudioEffectManager private constructor(private val context: Context) {
                 band.gain
             )
             // Channel 0 = Left, Channel 1 = Right
-            dp.setPreEqBand(0, i, eqBand)
-            dp.setPreEqBand(1, i, eqBand)
+            dp.setPreEqBandByChannelIndex(0, i, eqBand)
+            dp.setPreEqBandByChannelIndex(1, i, eqBand)
         }
 
         // 3. Peak Limiter configuration (anti-clipping protection)

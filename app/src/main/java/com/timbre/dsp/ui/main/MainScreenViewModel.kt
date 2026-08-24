@@ -249,7 +249,7 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun bindPresetToCurrentDevice(presetId: String) {
-        val dev = _currentDevice.value ?: return
+        val dev = currentDevice.value ?: return
         deviceManager.bindPresetToDevice(dev.deviceId, dev.deviceName, dev.deviceType, presetId)
     }
 
