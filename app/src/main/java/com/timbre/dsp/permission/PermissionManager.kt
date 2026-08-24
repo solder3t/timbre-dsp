@@ -143,7 +143,14 @@ class PermissionManager(private val context: Context) {
             return@withContext false
         }
         try {
-            val cmd = arrayOf("pm", "grant", context.packageName, Manifest.permission.DUMP)
+            val permsToGrant = mutableListOf(
+                Manifest.permission.DUMP,
+                Manifest.permission.RECORD_AUDIO
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                permsToGrant.add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
+
             val method = Shizuku::class.java.getDeclaredMethod(
                 "newProcess",
                 Array<String>::class.java,
@@ -151,26 +158,40 @@ class PermissionManager(private val context: Context) {
                 String::class.java
             )
             method.isAccessible = true
-            val process = method.invoke(null, cmd, null, null) as? java.lang.Process
-            val exitCode = process?.waitFor() ?: -1
-            Log.i(TAG, "Granted DUMP via Shizuku exitCode=$exitCode")
+
+            var allSuccess = true
+            for (perm in permsToGrant) {
+                val cmd = arrayOf("pm", "grant", context.packageName, perm)
+                val process = method.invoke(null, cmd, null, null) as? java.lang.Process
+                val exitCode = process?.waitFor() ?: -1
+                if (exitCode != 0) allSuccess = false
+            }
+            Log.i(TAG, "Granted permissions via Shizuku: allSuccess=$allSuccess")
             refreshStatus()
-            exitCode == 0
+            allSuccess
         } catch (e: Throwable) {
-            Log.e(TAG, "Failed to grant DUMP via Shizuku", e)
+            Log.e(TAG, "Failed to grant permissions via Shizuku", e)
             false
         }
     }
 
     suspend fun grantDumpPermissionViaRoot(): Boolean = withContext(Dispatchers.IO) {
         try {
-            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "pm grant ${context.packageName} ${Manifest.permission.DUMP}"))
+            val perms = mutableListOf(
+                Manifest.permission.DUMP,
+                Manifest.permission.RECORD_AUDIO
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                perms.add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
+            val cmd = perms.joinToString(" && ") { "pm grant ${context.packageName} $it" }
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
             val exitCode = process.waitFor()
-            Log.i(TAG, "Granted DUMP via Root exitCode=$exitCode")
+            Log.i(TAG, "Granted permissions via Root exitCode=$exitCode")
             refreshStatus()
             exitCode == 0
         } catch (e: Throwable) {
-            Log.e(TAG, "Failed to grant DUMP via Root", e)
+            Log.e(TAG, "Failed to grant permissions via Root", e)
             false
         }
     }

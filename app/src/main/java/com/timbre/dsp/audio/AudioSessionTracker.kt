@@ -2,6 +2,11 @@ package com.timbre.dsp.audio
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.AudioManager
+import android.media.AudioPlaybackConfiguration
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.timbre.dsp.model.AudioSessionInfo
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +30,75 @@ class AudioSessionTracker private constructor(private val context: Context) {
 
     private val effectManager = AudioEffectManager.getInstance(context)
     private val scope = CoroutineScope(Dispatchers.IO)
+    private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+
+    private var playbackCallback: AudioManager.AudioPlaybackCallback? = null
+
+    init {
+        registerPlaybackCallback()
+    }
+
+    private fun registerPlaybackCallback() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && audioManager != null) {
+            playbackCallback = object : AudioManager.AudioPlaybackCallback() {
+                override fun onPlaybackConfigChanged(configs: MutableList<AudioPlaybackConfiguration>?) {
+                    super.onPlaybackConfigChanged(configs)
+                    if (configs == null) return
+
+                    val currentSids = mutableSetOf<Int>()
+
+                    for (config in configs) {
+                        val sid = extractSessionId(config)
+                        val pkgName = resolvePackageNameForConfig(config)
+                        if (sid > 0) {
+                            currentSids.add(sid)
+                            if (!sessionsMap.containsKey(sid)) {
+                                onSessionOpened(sid, pkgName)
+                            }
+                        }
+                    }
+
+                    // Remove sessions that ended
+                    val toRemove = sessionsMap.keys.filter { it !in currentSids && it > 0 }
+                    for (sid in toRemove) {
+                        onSessionClosed(sid)
+                    }
+                }
+            }
+
+            try {
+                audioManager.registerAudioPlaybackCallback(playbackCallback!!, Handler(Looper.getMainLooper()))
+                Log.i(TAG, "Registered AudioPlaybackCallback")
+            } catch (e: Throwable) {
+                Log.w(TAG, "Could not register AudioPlaybackCallback", e)
+            }
+        }
+    }
+
+    private fun extractSessionId(config: AudioPlaybackConfiguration): Int {
+        return try {
+            val method = AudioPlaybackConfiguration::class.java.getDeclaredMethod("getAudioSessionId")
+            method.isAccessible = true
+            (method.invoke(config) as? Int) ?: 0
+        } catch (e: Throwable) {
+            0
+        }
+    }
+
+    private fun resolvePackageNameForConfig(config: AudioPlaybackConfiguration): String {
+        return try {
+            val uidMethod = AudioPlaybackConfiguration::class.java.getDeclaredMethod("getClientUid")
+            uidMethod.isAccessible = true
+            val uid = (uidMethod.invoke(config) as? Int) ?: 0
+            if (uid > 0) {
+                context.packageManager.getPackagesForUid(uid)?.firstOrNull() ?: "Active Player"
+            } else {
+                "Active Player"
+            }
+        } catch (e: Throwable) {
+            "Active Player"
+        }
+    }
 
     fun onSessionOpened(sessionId: Int, packageName: String) {
         if (sessionId <= 0) return
@@ -63,32 +137,25 @@ class AudioSessionTracker private constructor(private val context: Context) {
     }
 
     private suspend fun executeAudioFlingerDump(): String = withContext(Dispatchers.IO) {
-        // Try Shizuku first if available
         if (tryShizukuDump()) {
             return@withContext runShizukuDump()
         }
 
-        // Try direct dumpsys if DUMP permission is granted
         try {
             val process = Runtime.getRuntime().exec(arrayOf("dumpsys", "media.audio_flinger"))
             val reader = BufferedReader(InputStreamReader(process.inputStream))
             val text = reader.readText()
             process.waitFor()
             if (text.isNotBlank()) return@withContext text
-        } catch (e: Exception) {
-            // Ignored
-        }
+        } catch (e: Exception) {}
 
-        // Try root
         try {
             val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "dumpsys media.audio_flinger"))
             val reader = BufferedReader(InputStreamReader(process.inputStream))
             val text = reader.readText()
             process.waitFor()
             if (text.isNotBlank()) return@withContext text
-        } catch (e: Exception) {
-            // Ignored
-        }
+        } catch (e: Exception) {}
 
         ""
     }
@@ -110,7 +177,7 @@ class AudioSessionTracker private constructor(private val context: Context) {
                 String::class.java
             )
             method.isAccessible = true
-            val process = method.invoke(null, arrayOf("dumpsys", "media.audio_flinger"), null, null) as? Process
+            val process = method.invoke(null, arrayOf("dumpsys", "media.audio_flinger"), null, null) as? java.lang.Process
             if (process != null) {
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
                 val text = reader.readText()
@@ -126,29 +193,42 @@ class AudioSessionTracker private constructor(private val context: Context) {
     }
 
     private fun parseAndRegisterSessions(dumpText: String) {
-        // Patterns for AudioFlinger track sessions
-        val sessionPattern = Pattern.compile("Session\\s*(?:id)?\\s*[:=]\\s*(\\d+)", Pattern.CASE_INSENSITIVE)
-        val matcher = sessionPattern.matcher(dumpText)
-        val discoveredSessions = mutableSetOf<Int>()
+        val discoveredSessions = mutableMapOf<Int, String>()
 
-        while (matcher.find()) {
-            val idStr = matcher.group(1) ?: continue
-            val sid = idStr.toIntOrNull() ?: continue
+        // 1. Table format: pid/uid session port -> e.g. "2498/ 10053 4849 3496"
+        val tablePattern = Pattern.compile("(\\d+)\\s*/\\s*(\\d+)\\s+(\\d+)\\s+(\\d+)")
+        val tableMatcher = tablePattern.matcher(dumpText)
+        while (tableMatcher.find()) {
+            val uid = tableMatcher.group(2)?.toIntOrNull() ?: 0
+            val sid = tableMatcher.group(3)?.toIntOrNull() ?: 0
             if (sid > 0) {
-                discoveredSessions.add(sid)
+                val pkg = if (uid > 0) {
+                    context.packageManager.getPackagesForUid(uid)?.firstOrNull() ?: "Player"
+                } else "Active Playback Stream"
+                discoveredSessions[sid] = pkg
+            }
+        }
+
+        // 2. Fallback key-value pattern: Session id : 1234
+        val sessionPattern = Pattern.compile("Session\\s*(?:id)?\\s*[:=]?\\s*(\\d+)", Pattern.CASE_INSENSITIVE)
+        val matcher = sessionPattern.matcher(dumpText)
+        while (matcher.find()) {
+            val sid = matcher.group(1)?.toIntOrNull() ?: continue
+            if (sid > 0 && !discoveredSessions.containsKey(sid)) {
+                discoveredSessions[sid] = "Active Playback Stream"
             }
         }
 
         // Register newly discovered sessions
-        for (sid in discoveredSessions) {
+        for ((sid, pkg) in discoveredSessions) {
             if (!sessionsMap.containsKey(sid)) {
-                onSessionOpened(sid, "Active Playback Stream")
+                onSessionOpened(sid, pkg)
             }
         }
     }
 
     private fun getAppName(packageName: String): String {
-        if (packageName == "Unknown" || packageName == "Active Playback Stream") return packageName
+        if (packageName == "Unknown" || packageName == "Active Playback Stream" || packageName == "Active Player" || packageName == "Player") return packageName
         return try {
             val pm = context.packageManager
             val info = pm.getApplicationInfo(packageName, 0)

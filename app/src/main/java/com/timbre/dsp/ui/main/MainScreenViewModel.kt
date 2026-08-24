@@ -253,8 +253,24 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
         deviceManager.bindPresetToDevice(dev.deviceId, dev.deviceName, dev.deviceType, presetId)
     }
 
+    fun getInstalledMediaApps(): List<com.timbre.dsp.audio.InstalledAppItem> {
+        return appProfileManager.getInstalledMediaApps()
+    }
+
     fun bindAppToPreset(packageName: String, appName: String, presetId: String) {
         appProfileManager.addAppProfile(packageName, appName, presetId)
+    }
+
+    fun updateAppProfile(packageName: String, presetId: String, isEnabled: Boolean) {
+        appProfileManager.updateAppProfile(packageName, presetId, isEnabled)
+    }
+
+    fun toggleAppProfile(packageName: String, isEnabled: Boolean) {
+        appProfileManager.toggleAppProfile(packageName, isEnabled)
+    }
+
+    fun removeAppProfile(packageName: String) {
+        appProfileManager.removeAppProfile(packageName)
     }
 
     fun applyHearingAudiogram(audiogram: HearingAudiogram, preset: EQPreset) {

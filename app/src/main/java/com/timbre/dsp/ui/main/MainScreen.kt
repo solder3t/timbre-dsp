@@ -117,9 +117,13 @@ fun MainScreen(
                 2 -> SessionsScreen(
                     activeSessions = activeSessions,
                     appProfiles = appProfiles,
+                    installedApps = viewModel.getInstalledMediaApps(),
                     presets = presets,
                     onRescan = { viewModel.rescanSessions() },
-                    onBindAppPreset = { pkg, name, presetId -> viewModel.bindAppToPreset(pkg, name, presetId) }
+                    onBindAppPreset = { pkg, name, presetId -> viewModel.bindAppToPreset(pkg, name, presetId) },
+                    onToggleAppProfile = { pkg, enabled -> viewModel.toggleAppProfile(pkg, enabled) },
+                    onUpdateAppProfile = { pkg, presetId, enabled -> viewModel.updateAppProfile(pkg, presetId, enabled) },
+                    onRemoveAppProfile = { pkg -> viewModel.removeAppProfile(pkg) }
                 )
                 3 -> PermissionSetupSheet(
                     permissionStatus = permissionStatus,

@@ -250,6 +250,54 @@ fun PermissionSetupSheet(
             }
         }
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 6. OEM / Samsung Audio Diagnostics Card
+        val isSamsung = android.os.Build.MANUFACTURER.contains("samsung", ignoreCase = true)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Settings, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isSamsung) "Samsung SoundAlive & Dolby Atmos" else "OEM Audio Effects Diagnostics",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = if (isSamsung)
+                        "Samsung One UI includes built-in Dolby Atmos and SoundAlive which apply post-processing. For pure, bit-accurate EQ curves, set Dolby Atmos to Auto or Off in Samsung Sound Settings."
+                    else
+                        "System audio enhancements (e.g. Dirac, Dolby Atmos) may alter output dynamics before Timbre DSP. You can configure them in Sound Settings.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = {
+                        try {
+                            val intent = android.content.Intent(android.provider.Settings.ACTION_SOUND_SETTINGS).apply {
+                                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Could not open sound settings", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Open System Sound Settings")
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

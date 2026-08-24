@@ -61,7 +61,12 @@ class AudioEffectManager private constructor(private val context: Context) {
                 enabled = currentSettings.isEnabled
             }
             activeEqualizers[sessionId] = eq
+            applyLegacyEQ(eq, currentSettings.bands)
+        } catch (e: Throwable) {
+            Log.w(TAG, "Equalizer not available for session $sessionId: ${e.message}")
+        }
 
+        try {
             val bb = BassBoost(0, sessionId).apply {
                 enabled = currentSettings.isEnabled && currentSettings.bassBoostEnabled
                 if (strengthSupported) {
@@ -69,7 +74,11 @@ class AudioEffectManager private constructor(private val context: Context) {
                 }
             }
             activeBassBoosts[sessionId] = bb
+        } catch (e: Throwable) {
+            Log.w(TAG, "BassBoost not available for session $sessionId: ${e.message}")
+        }
 
+        try {
             val virt = Virtualizer(0, sessionId).apply {
                 enabled = currentSettings.isEnabled && currentSettings.virtualizerEnabled
                 if (strengthSupported) {
@@ -77,10 +86,8 @@ class AudioEffectManager private constructor(private val context: Context) {
                 }
             }
             activeVirtualizers[sessionId] = virt
-            applyLegacyEQ(eq, currentSettings.bands)
-            Log.i(TAG, "Attached legacy AudioEffects to session $sessionId")
         } catch (e: Throwable) {
-            Log.e(TAG, "Failed to attach legacy AudioEffects to session $sessionId", e)
+            Log.w(TAG, "Virtualizer not available for session $sessionId: ${e.message}")
         }
     }
 

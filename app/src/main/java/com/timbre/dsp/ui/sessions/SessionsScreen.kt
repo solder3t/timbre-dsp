@@ -16,7 +16,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -33,6 +35,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -45,28 +48,48 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.timbre.dsp.DSPEngine
+import com.timbre.dsp.audio.InstalledAppItem
 import com.timbre.dsp.model.AppProfile
 import com.timbre.dsp.model.AudioSessionInfo
 import com.timbre.dsp.model.EQPreset
+import com.timbre.dsp.ui.components.AddAppProfileDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.Locale
 import kotlin.math.sin
 
 @Composable
 fun SessionsScreen(
     activeSessions: List<AudioSessionInfo>,
     appProfiles: List<AppProfile>,
+    installedApps: List<InstalledAppItem>,
     presets: List<EQPreset>,
     onRescan: () -> Unit,
     onBindAppPreset: (packageName: String, appName: String, presetId: String) -> Unit,
+    onToggleAppProfile: (packageName: String, isEnabled: Boolean) -> Unit,
+    onUpdateAppProfile: (packageName: String, presetId: String, isEnabled: Boolean) -> Unit,
+    onRemoveAppProfile: (packageName: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
     var isTestPlaying by remember { mutableStateOf(false) }
     var playbackJob by remember { mutableStateOf<Job?>(null) }
     var audioTrack by remember { mutableStateOf<AudioTrack?>(null) }
+    var showAddAppDialog by remember { mutableStateOf(false) }
+
+    if (showAddAppDialog) {
+        AddAppProfileDialog(
+            installedApps = installedApps,
+            presets = presets,
+            onDismiss = { showAddAppDialog = false },
+            onAddProfile = { pkg, name, presetId ->
+                onBindAppPreset(pkg, name, presetId)
+                showAddAppDialog = false
+            }
+        )
+    }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -266,52 +289,133 @@ fun SessionsScreen(
             }
         }
 
-        // 3. Per-App Profile Rules List
+        // 3. User-Selectable Per-App Profile Rules List
         item {
             Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Apps, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Configured Per-App Auto-Profiles (${appProfiles.size})",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-        }
-
-        items(appProfiles) { profile ->
-            Card(
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                )
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Apps, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Configured Per-App Auto-Profiles (${appProfiles.size})",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = { showAddAppDialog = true },
+                    contentPadding = ButtonDefaults.ContentPadding
                 ) {
-                    Column {
-                        Text(text = profile.appName, style = MaterialTheme.typography.bodyMedium)
-                        Text(text = profile.packageName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Text(
-                            text = profile.presetId.replace("_", " ").replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.ROOT) else it.toString() },
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Add App Rule")
                 }
             }
         }
 
+        items(appProfiles) { profile ->
+            ConfiguredAppProfileCard(
+                profile = profile,
+                presets = presets,
+                onToggleEnabled = { onToggleAppProfile(profile.packageName, it) },
+                onSelectPreset = { onUpdateAppProfile(profile.packageName, it, profile.isEnabled) },
+                onDelete = { onRemoveAppProfile(profile.packageName) }
+            )
+        }
+
         item {
             Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+private fun ConfiguredAppProfileCard(
+    profile: AppProfile,
+    presets: List<EQPreset>,
+    onToggleEnabled: (Boolean) -> Unit,
+    onSelectPreset: (String) -> Unit,
+    onDelete: () -> Unit
+) {
+    var dropdownExpanded by remember { mutableStateOf(false) }
+    val currentPresetName = remember(profile.presetId, presets) {
+        presets.find { it.id == profile.presetId }?.name ?: profile.presetId.replace("_", " ").replaceFirstChar { it.titlecase(Locale.ROOT) }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (profile.isEnabled)
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = profile.appName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (profile.isEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = profile.packageName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Select Preset Chip
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedButton(
+                        onClick = { dropdownExpanded = true },
+                        modifier = Modifier.height(32.dp),
+                        contentPadding = ButtonDefaults.TextButtonContentPadding
+                    ) {
+                        Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(currentPresetName, style = MaterialTheme.typography.labelSmall)
+                    }
+
+                    DropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false }
+                    ) {
+                        presets.forEach { preset ->
+                            DropdownMenuItem(
+                                text = { Text(preset.name) },
+                                onClick = {
+                                    onSelectPreset(preset.id)
+                                    dropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(
+                    checked = profile.isEnabled,
+                    onCheckedChange = onToggleEnabled
+                )
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete Profile",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                    )
+                }
+            }
         }
     }
 }
