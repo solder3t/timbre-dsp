@@ -3,6 +3,7 @@ package com.timbre.dsp.data.api
 import android.content.Context
 import android.util.Log
 import com.google.gson.JsonParser
+import com.timbre.dsp.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -21,7 +22,9 @@ object UpdateChecker {
 
     private const val TAG = "UpdateChecker"
     private const val GITHUB_RELEASES_URL = "https://api.github.com/repos/solder3t/timbre-dsp/releases/latest"
-    const val CURRENT_VERSION = "1.2.4"
+    
+    val CURRENT_VERSION: String
+        get() = BuildConfig.VERSION_NAME
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
@@ -38,8 +41,7 @@ object UpdateChecker {
 
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    val code = response.code
-                    Log.w(TAG, "GitHub API returned status $code")
+                    Log.w(TAG, "Update check HTTP error: ${response.code}")
                     return@withContext UpdateInfo(
                         isAvailable = false,
                         latestVersion = currentVersion,
@@ -49,41 +51,55 @@ object UpdateChecker {
                     )
                 }
 
-                val body = response.body.string()
-                val json = JsonParser.parseString(body).asJsonObject
+                val body = response.body?.string() ?: return@withContext UpdateInfo(
+                    isAvailable = false,
+                    latestVersion = currentVersion,
+                    changelog = "",
+                    apkUrl = null,
+                    releaseUrl = "https://github.com/solder3t/timbre-dsp/releases"
+                )
 
-                val tagName = json.get("tag_name")?.asString ?: "1.0"
-                val cleanTag = tagName.removePrefix("v").removePrefix("V")
-                val releaseName = json.get("name")?.asString ?: "Release $cleanTag"
-                val changelog = json.get("body")?.asString ?: "No changelog provided."
+                val json = JsonParser.parseString(body).asJsonObject
+                val rawTag = json.get("tag_name")?.asString ?: ""
+                val releaseName = json.get("name")?.asString ?: rawTag
+                val changelog = json.get("body")?.asString ?: "Bug fixes and DSP engine improvements."
                 val htmlUrl = json.get("html_url")?.asString ?: "https://github.com/solder3t/timbre-dsp/releases"
 
-                var apkUrl: String? = null
-                val assets = json.getAsJsonArray("assets")
-                if (assets != null) {
-                    for (i in 0 until assets.size()) {
-                        val assetObj = assets.get(i).asJsonObject
+                // Extract clean semver from tag like "v1.2.0" or "v1.2.0-3"
+                val latestCleanVersion = rawTag
+                    .removePrefix("v")
+                    .substringBefore("-")
+                    .trim()
+
+                // Find APK asset download URL if available
+                var apkDownloadUrl: String? = null
+                val assetsArray = json.getAsJsonArray("assets")
+                if (assetsArray != null) {
+                    for (assetElem in assetsArray) {
+                        val assetObj = assetElem.asJsonObject
                         val name = assetObj.get("name")?.asString ?: ""
                         if (name.endsWith(".apk", ignoreCase = true)) {
-                            apkUrl = assetObj.get("browser_download_url")?.asString
+                            apkDownloadUrl = assetObj.get("browser_download_url")?.asString
                             break
                         }
                     }
                 }
 
-                val isNewer = isVersionNewer(cleanTag, currentVersion)
+                val isNewer = isVersionNewer(latestCleanVersion, currentVersion)
 
-                UpdateInfo(
+                Log.d(TAG, "Current: $currentVersion, Latest: $latestCleanVersion, isNewer: $isNewer, apkUrl: $apkDownloadUrl")
+
+                return@withContext UpdateInfo(
                     isAvailable = isNewer,
-                    latestVersion = cleanTag,
+                    latestVersion = latestCleanVersion.ifBlank { releaseName },
                     changelog = changelog,
-                    apkUrl = apkUrl,
+                    apkUrl = apkDownloadUrl,
                     releaseUrl = htmlUrl
                 )
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error checking for updates", e)
-            UpdateInfo(
+            return@withContext UpdateInfo(
                 isAvailable = false,
                 latestVersion = currentVersion,
                 changelog = "",
@@ -94,18 +110,16 @@ object UpdateChecker {
     }
 
     fun isVersionNewer(latest: String, current: String): Boolean {
-        try {
-            val latestParts = latest.split(".").mapNotNull { it.toIntOrNull() }
-            val currentParts = current.split(".").mapNotNull { it.toIntOrNull() }
-            val maxLen = maxOf(latestParts.size, currentParts.size)
-            for (i in 0 until maxLen) {
-                val l = latestParts.getOrElse(i) { 0 }
-                val c = currentParts.getOrElse(i) { 0 }
-                if (l > c) return true
-                if (l < c) return false
-            }
-        } catch (e: Exception) {
-            return latest.trim() != current.trim()
+        if (latest.isBlank() || current.isBlank()) return false
+        val latestParts = latest.split(".").mapNotNull { it.toIntOrNull() }
+        val currentParts = current.split(".").mapNotNull { it.toIntOrNull() }
+
+        val maxLen = maxOf(latestParts.size, currentParts.size)
+        for (i in 0 until maxLen) {
+            val l = latestParts.getOrElse(i) { 0 }
+            val c = currentParts.getOrElse(i) { 0 }
+            if (l > c) return true
+            if (l < c) return false
         }
         return false
     }
