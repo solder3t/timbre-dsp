@@ -214,11 +214,11 @@ fun MainScreen(
                     .fillMaxWidth()
                     .hazeEffect(
                         state = hazeState,
-                        style = HazeMaterials.regular(MaterialTheme.colorScheme.surface.copy(alpha = 0.70f))
+                        style = HazeMaterials.ultraThin()
                     )
                     .navigationBarsPadding()
             ) {
-                // Top border line
+                // Top shimmer accent divider line (matching musaic-player)
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -227,9 +227,9 @@ fun MainScreen(
                                 brush = Brush.horizontalGradient(
                                     colors = listOf(
                                         Color.Transparent,
-                                        onSurface.copy(alpha = 0.12f),
-                                        primary.copy(alpha = 0.35f),
-                                        onSurface.copy(alpha = 0.12f),
+                                        onSurface.copy(alpha = 0.15f),
+                                        primary.copy(alpha = 0.30f),
+                                        onSurface.copy(alpha = 0.15f),
                                         Color.Transparent
                                     )
                                 ),
