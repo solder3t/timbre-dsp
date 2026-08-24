@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.timbre.dsp.audio
 
 import android.content.Context

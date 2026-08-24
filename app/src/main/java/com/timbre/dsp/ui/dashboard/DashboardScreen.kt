@@ -31,16 +31,17 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -70,6 +71,7 @@ import com.timbre.dsp.ui.components.ParametricBandEditorDialog
 import com.timbre.dsp.ui.components.SavePresetDialog
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     settings: DSPSettings,
@@ -368,7 +370,7 @@ fun DashboardScreen(
 
         // 6. EQ Mode Selector Tab
         item {
-            TabRow(
+            PrimaryTabRow(
                 selectedTabIndex = if (settings.eqMode == EQMode.GRAPHIC_10) 0 else 1,
                 modifier = Modifier.fillMaxWidth()
             ) {

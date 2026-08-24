@@ -17,12 +17,13 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.timbre.dsp.data.EqualizerApoParser
 import com.timbre.dsp.model.EQPreset
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImportExportDialog(
     currentPreset: EQPreset,
@@ -58,7 +60,7 @@ fun ImportExportDialog(
         title = { Text("Equalizer APO / Peace EQ") },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                TabRow(selectedTabIndex = selectedTab) {
+                PrimaryTabRow(selectedTabIndex = selectedTab) {
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
