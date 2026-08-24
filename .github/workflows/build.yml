@@ -72,6 +72,7 @@ jobs:
           fi
 
           printf '%s' "$RELEASE_KEYSTORE_BASE64" | openssl base64 -d -A -out release-key.jks
+          cp release-key.jks app/release-key.jks
 
       - name: Validate release keystore
         if: inputs.build_type == 'release' || inputs.build_type == 'both'
@@ -88,6 +89,7 @@ jobs:
           echo "storePassword=${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" >> keystore.properties
           echo "keyAlias=${{ secrets.RELEASE_KEY_ALIAS }}" >> keystore.properties
           echo "keyPassword=${{ secrets.RELEASE_KEY_PASSWORD }}" >> keystore.properties
+          cp keystore.properties app/keystore.properties
 
       - name: Determine artifact type
         id: artifacts
