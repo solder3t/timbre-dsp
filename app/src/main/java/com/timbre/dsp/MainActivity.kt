@@ -12,6 +12,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.timbre.dsp.theme.TimbreTheme
@@ -35,7 +37,8 @@ class MainActivity : ComponentActivity() {
         startForegroundServiceIfNeeded()
 
         setContent {
-            TimbreTheme {
+            val themeSettings by com.timbre.dsp.theme.ThemeRepository.themeSettings.collectAsState()
+            TimbreTheme(themeSettings = themeSettings) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

@@ -227,4 +227,49 @@
     <string name="btn_close">Close</string>
     <string name="btn_save">Save</string>
     <string name="btn_apply">Apply</string>
+
+    <!-- Settings Navigation & Screen -->
+    <string name="nav_settings">Settings</string>
+    <string name="settings_header_title">Settings</string>
+    <string name="settings_header_subtitle">Appearance, DSP engine, permissions &amp; updates</string>
+
+    <string name="settings_section_appearance">Appearance &amp; Theme</string>
+    <string name="settings_section_permissions">Audio Setup &amp; Permissions</string>
+    <string name="settings_section_engine">DSP Engine &amp; Audio Routing</string>
+    <string name="settings_section_backup">Sleep Timer &amp; Backup Suite</string>
+    <string name="settings_section_about">App Info &amp; Updates</string>
+
+    <!-- Theme & Appearance -->
+    <string name="theme_mode_title">Theme Mode</string>
+    <string name="theme_mode_system">System</string>
+    <string name="theme_mode_dark">Dark</string>
+    <string name="theme_mode_light">Light</string>
+    <string name="theme_mode_amoled">AMOLED</string>
+    <string name="theme_dynamic_title">Material You Dynamic Color</string>
+    <string name="theme_dynamic_desc">Extract accent palette from system wallpaper (Android 12+)</string>
+    <string name="theme_accent_title">Accent Color Palette</string>
+    <string name="theme_blur_title">Frosted Glass Blur</string>
+    <string name="theme_blur_desc">Render real-time Haze backdrop blur behind cards and bars</string>
+
+    <!-- DSP Engine Settings -->
+    <string name="engine_routing_title">Audio Routing Mode</string>
+    <string name="engine_routing_desc">Method used to capture and process system media streams</string>
+    <string name="engine_limiter_title">Headroom Peak Limiter</string>
+    <string name="engine_limiter_desc">Prevent digital clipping and inter-sample distortion</string>
+    <string name="engine_visualizer_title">Live Audio Visualizer</string>
+    <string name="engine_visualizer_desc">Process FFT magnitude spectrum in real time</string>
+
+    <!-- Updates & About -->
+    <string name="btn_check_updates">Check for Updates</string>
+    <string name="update_checking">Checking GitHub for latest release…</string>
+    <string name="update_available_title">Update Available!</string>
+    <string name="update_up_to_date">Timbre is up to date (v%1$s)</string>
+    <string name="update_error">Could not reach GitHub Releases API</string>
+    <string name="btn_download_update">Download APK</string>
+    <string name="btn_view_github">View on GitHub</string>
+    <string name="about_app_desc">High-Fidelity Audio DSP &amp; Parametric Equalizer for Android</string>
+    <string name="about_github_title">Source Code &amp; Releases</string>
+    <string name="about_github_desc">github.com/solder3t/timbre-dsp</string>
+    <string name="about_issues_title">Report an Issue</string>
+    <string name="about_issues_desc">Submit bugs, feature requests, or device measurements</string>
 </resources>

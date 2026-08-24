@@ -63,11 +63,13 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
     val irProfiles: StateFlow<List<ImpulseResponseProfile>> = ConvolutionRepository.profiles
     val sleepTimerSeconds: StateFlow<Int> = SleepTimerManager.remainingSeconds
     val isSleepTimerRunning: StateFlow<Boolean> = SleepTimerManager.isTimerRunning
+    val themeSettings: StateFlow<com.timbre.dsp.theme.ThemeSettings> = com.timbre.dsp.theme.ThemeRepository.themeSettings
 
     private val _settings = MutableStateFlow(SettingsRepository.loadSettings(application))
     val settings: StateFlow<DSPSettings> = _settings.asStateFlow()
 
     init {
+        com.timbre.dsp.theme.ThemeRepository.init(application)
         PresetRepository.init(application)
         DSPEngine.start()
         ConvolutionRepository.initialize(application)
@@ -417,6 +419,35 @@ class MainScreenViewModel(application: Application) : AndroidViewModel(applicati
 
     fun requestBatteryOptimization() {
         permissionManager.requestIgnoreBatteryOptimization(getApplication())
+    }
+
+    fun setThemeMode(mode: com.timbre.dsp.theme.ThemeMode) {
+        com.timbre.dsp.theme.ThemeRepository.setThemeMode(mode, getApplication())
+    }
+
+    fun setDynamicColor(dynamic: Boolean) {
+        com.timbre.dsp.theme.ThemeRepository.setUseDynamicColor(dynamic, getApplication())
+    }
+
+    fun setSeedColor(seed: Long) {
+        com.timbre.dsp.theme.ThemeRepository.setSeedColor(seed, getApplication())
+    }
+
+    fun setFrostedGlass(enable: Boolean) {
+        com.timbre.dsp.theme.ThemeRepository.setEnableFrostedGlass(enable, getApplication())
+    }
+
+    fun setRoutingMode(mode: RoutingMode) {
+        pushSettings(_settings.value.copy(routingMode = mode))
+        routingManager.setMode(mode)
+    }
+
+    fun toggleVisualizer(enabled: Boolean) {
+        pushSettings(_settings.value.copy(isVisualizerEnabled = enabled))
+    }
+
+    fun toggleLimiter(enabled: Boolean) {
+        pushSettings(_settings.value.copy(limiterEnabled = enabled))
     }
 
     fun rescanSessions() {

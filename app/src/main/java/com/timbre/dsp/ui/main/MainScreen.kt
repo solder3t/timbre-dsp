@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +49,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.timbre.dsp.ui.dashboard.DashboardScreen
 import com.timbre.dsp.ui.effects.EffectsScreen
 import com.timbre.dsp.ui.sessions.SessionsScreen
-import com.timbre.dsp.ui.setup.PermissionSetupSheet
+import com.timbre.dsp.ui.settings.SettingsScreen
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
@@ -85,12 +86,13 @@ fun MainScreen(
     val irProfiles by viewModel.irProfiles.collectAsStateWithLifecycle()
     val isSleepTimerRunning by viewModel.isSleepTimerRunning.collectAsStateWithLifecycle()
     val sleepTimerSeconds by viewModel.sleepTimerSeconds.collectAsStateWithLifecycle()
+    val themeSettings by viewModel.themeSettings.collectAsStateWithLifecycle()
 
     val navTabs = listOf(
         NavTabItem(stringResource(R.string.nav_equalizer), Icons.Default.GraphicEq),
         NavTabItem(stringResource(R.string.nav_effects), Icons.Default.Tune),
         NavTabItem(stringResource(R.string.nav_sessions), Icons.Default.MusicNote),
-        NavTabItem(stringResource(R.string.nav_setup), Icons.Default.Security)
+        NavTabItem(stringResource(R.string.nav_settings), Icons.Default.Settings)
     )
 
     val primary = MaterialTheme.colorScheme.primary
@@ -135,7 +137,7 @@ fun MainScreen(
                     onSetTargetCurve = { viewModel.setTargetCurve(it) },
                     onNavigateToSetup = { selectedTab = 3 },
                     onApplyAiSettings = { viewModel.applyAiSettings(it) },
-                    hazeState = hazeState
+                    hazeState = if (themeSettings.enableFrostedGlass) hazeState else null
                 )
                 1 -> EffectsScreen(
                     settings = settings,
@@ -152,7 +154,7 @@ fun MainScreen(
                     onConvolutionChange = { enabled, profileId, wetDry -> viewModel.setConvolution(enabled, profileId, wetDry) },
                     onImportCustomIR = { uri, name -> viewModel.importCustomIR(uri, name) },
                     onApplyHearingAudiogram = { audiogram, preset -> viewModel.applyHearingAudiogram(audiogram, preset) },
-                    hazeState = hazeState
+                    hazeState = if (themeSettings.enableFrostedGlass) hazeState else null
                 )
                 2 -> SessionsScreen(
                     activeSessions = activeSessions,
@@ -164,12 +166,21 @@ fun MainScreen(
                     onToggleAppProfile = { pkg, enabled -> viewModel.toggleAppProfile(pkg, enabled) },
                     onUpdateAppProfile = { pkg, presetId, enabled -> viewModel.updateAppProfile(pkg, presetId, enabled) },
                     onRemoveAppProfile = { pkg -> viewModel.removeAppProfile(pkg) },
-                    hazeState = hazeState
+                    hazeState = if (themeSettings.enableFrostedGlass) hazeState else null
                 )
-                3 -> PermissionSetupSheet(
+                3 -> SettingsScreen(
+                    settings = settings,
+                    themeSettings = themeSettings,
                     permissionStatus = permissionStatus,
                     isSleepTimerRunning = isSleepTimerRunning,
                     sleepTimerSeconds = sleepTimerSeconds,
+                    onSetThemeMode = { viewModel.setThemeMode(it) },
+                    onSetDynamicColor = { viewModel.setDynamicColor(it) },
+                    onSetSeedColor = { viewModel.setSeedColor(it) },
+                    onSetFrostedGlass = { viewModel.setFrostedGlass(it) },
+                    onSetRoutingMode = { viewModel.setRoutingMode(it) },
+                    onToggleLimiter = { viewModel.toggleLimiter(it) },
+                    onToggleVisualizer = { viewModel.toggleVisualizer(it) },
                     onRequestShizuku = { viewModel.requestShizukuPermission() },
                     onGrantDumpShizuku = { viewModel.grantDumpViaShizuku() },
                     onGrantDumpRoot = { viewModel.grantDumpViaRoot() },
@@ -180,7 +191,7 @@ fun MainScreen(
                     onExportBackup = { viewModel.exportFullBackup(it) },
                     onImportBackup = { viewModel.importFullBackup(it) },
                     onRefresh = { viewModel.refreshPermissions() },
-                    hazeState = hazeState
+                    hazeState = if (themeSettings.enableFrostedGlass) hazeState else null
                 )
             }
         }

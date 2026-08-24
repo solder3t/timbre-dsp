@@ -270,4 +270,27 @@ class DSPRepositoryTest {
     assertEquals(4.8f, applied.clarityGain, 0.01f)
     assertTrue(applied.currentPresetId.contains("warm_studio_acoustic"))
   }
+
+  @Test
+  fun testThemeSettingsAndAccents() {
+    val defaultSettings = com.timbre.dsp.theme.ThemeSettings()
+    assertEquals(com.timbre.dsp.theme.ThemeMode.SYSTEM, defaultSettings.themeMode)
+    assertTrue(defaultSettings.useDynamicColor)
+    assertTrue(defaultSettings.enableFrostedGlass)
+
+    val accents = com.timbre.dsp.theme.ThemeSettings.predefinedAccents
+    assertEquals(6, accents.size)
+    assertTrue(accents.any { it.name == "Indigo" })
+    assertTrue(accents.any { it.name == "Cyan" })
+    assertTrue(accents.any { it.name == "Emerald" })
+  }
+
+  @Test
+  fun testUpdateCheckerVersionComparison() {
+    assertTrue(com.timbre.dsp.data.api.UpdateChecker.isVersionNewer("1.1", "1.0"))
+    assertTrue(com.timbre.dsp.data.api.UpdateChecker.isVersionNewer("2.0.0", "1.9.9"))
+    assertTrue(com.timbre.dsp.data.api.UpdateChecker.isVersionNewer("1.0.1", "1.0"))
+    assertTrue(!com.timbre.dsp.data.api.UpdateChecker.isVersionNewer("1.0", "1.0"))
+    assertTrue(!com.timbre.dsp.data.api.UpdateChecker.isVersionNewer("0.9", "1.0"))
+  }
 }
